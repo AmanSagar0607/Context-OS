@@ -674,8 +674,8 @@ Usage-based billing per API key.
 | Priority | Status | Owner |
 |----------|--------|-------|
 | 1. Architecture extraction | ✅ Completed | Tech Lead |
-| 2. Unified memory system | 🔄 In Progress | Tech Lead |
-| 3. Hybrid retrieval | Not Started | Tech Lead |
+| 2. Unified memory system | ✅ Completed | Tech Lead |
+| 3. Hybrid retrieval | ✅ Completed | Tech Lead |
 | 4. Python SDK | Not Started | Tech Lead |
 | 5. TypeScript SDK | Not Started | Tech Lead |
 | 6. CLI tool | Not Started | Tech Lead |
@@ -705,13 +705,22 @@ Usage-based billing per API key.
 - [x] Created `apps/server/middleware/auth.py` — Auth middleware
 - [x] Created 15 passing tests (memory models + embeddings)
 
+### Hybrid Retrieval (2026-06-19)
+
+- [x] Created `packages/context-core/retrieval/vector_search.py` — pgvector search
+- [x] Created `packages/context-core/retrieval/bm25_search.py` — PostgreSQL FTS
+- [x] Created `packages/context-core/retrieval/fusion.py` — RRF fusion
+- [x] Created `packages/context-core/retrieval/chunking.py` — Recursive chunker
+- [x] Created `packages/context-core/retrieval/pipeline.py` — Full retrieval pipeline
+- [x] Created 17 retrieval tests (RRF, chunking)
+- [x] Total tests: 32 passing
+
 ## Next Tasks
 
-1. Create `packages/context-core/retrieval/vector_search.py` — pgvector search
-2. Create `packages/context-core/retrieval/bm25_search.py` — PostgreSQL FTS
-3. Create `packages/context-core/retrieval/fusion.py` — RRF fusion
-4. Create `packages/context-core/retrieval/chunking.py` — Recursive chunker
-5. Create `packages/context-core/retrieval/pipeline.py` — Full retrieval pipeline
+1. Create Python SDK package (`sdk/python/context_ai/`)
+2. Create TypeScript SDK package (`sdk/typescript/src/`)
+3. Create CLI tool (`cli/context_cli/`)
+4. Refactor MCP server with 4 tool groups
 
 ## Blockers
 
