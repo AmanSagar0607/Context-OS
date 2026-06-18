@@ -23,13 +23,15 @@
     <a href="https://pepy.tech/project/context-ai" alt="Downloads">
         <img alt="Downloads" src="https://img.shields.io/pypi/dm/context-ai"></a>
     <br/>
-    <a href="https://discord.gg/contextos" alt="Discord" target="_blank">
-        <img alt="Discord" src="https://img.shields.io/discord/YOUR_SERVER_ID?style=social&logo=discord"></a>
-    <a href="https://x.com/contextos" alt="X (formerly Twitter)">
-        <img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/contextos?style=social&logo=x"></a>
+    <a href="https://x.com/AmanSagar0607a" alt="X (formerly Twitter)" target="_blank">
+        <img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/AmanSagar0607a?style=social&logo=x"></a>
+    <a href="https://github.com/AmanSagar0607" alt="GitHub" target="_blank">
+        <img alt="GitHub followers" src="https://img.shields.io/github/followers/AmanSagar0607?style=social&logo=github"></a>
+    <a href="https://amansagar.in" alt="Website" target="_blank">
+        <img alt="Website" src="https://img.shields.io/badge/🌐-amansagar.in-blue?style=social"></a>
+    <br/>
     <a href="https://github.com/AmanSagar0607/Context-OS" alt="PRs Welcome">
         <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
-    <br/>
     <a href="https://github.com/AmanSagar0607/Context-OS/pkgs/context-core" alt="Package">
         <img alt="Package" src="https://img.shields.io/badge/package-context--core-blue"></a>
     <a href="https://docs.contextos.dev" alt="Docs">
@@ -50,6 +52,13 @@
 
 <p align="center">
     <b>AI can finally remember.</b> The open-source context infrastructure that gives AI agents memory, web intelligence, and structured knowledge — via a single API and MCP server.
+</p>
+
+<p align="center">
+    <a href="https://amansagar.in" target="_blank">🌐 Website</a> &middot;
+    <a href="https://x.com/AmanSagar0607a" target="_blank">𝕏 Twitter</a> &middot;
+    <a href="https://github.com/AmanSagar0607" target="_blank">GitHub</a> &middot;
+    <a href="https://linkedin.com/in/amansagar0607" target="_blank">LinkedIn</a>
 </p>
 
 ---
@@ -481,6 +490,44 @@ This work is licensed under the MIT License.
 
 ---
 
+## Built By
+
+<div align="center">
+    <table>
+        <tr>
+            <td align="center">
+                <a href="https://amansagar.in">
+                    <img src="https://avatars.githubusercontent.com/u/AmanSagar0607" width="100" style="border-radius:50%" alt="Aman Sagar"/>
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <b>Aman Sagar</b><br/>
+                <sub>Full Stack Developer & AI Enthusiast</sub>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <a href="https://amansagar.in" target="_blank">
+                    <img alt="Website" src="https://img.shields.io/badge/🌐-amansagar.in-blue?style=flat-square">
+                </a>
+                <a href="https://x.com/AmanSagar0607a" target="_blank">
+                    <img alt="X (Twitter)" src="https://img.shields.io/badge/𝕏-@AmanSagar0607a-black?style=flat-square&logo=x&logoColor=white">
+                </a>
+                <a href="https://github.com/AmanSagar0607" target="_blank">
+                    <img alt="GitHub" src="https://img.shields.io/badge/GitHub-AmanSagar0607-181717?style=flat-square&logo=github">
+                </a>
+                <a href="https://linkedin.com/in/amansagar0607" target="_blank">
+                    <img alt="LinkedIn" src="https://img.shields.io/badge/LinkedIn-amansagar0607-0A66C2?style=flat-square&logo=linkedin">
+                </a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+---
+
 ## Acknowledgments
 
 Built with care for the AI agent community.
@@ -488,8 +535,9 @@ Built with care for the AI agent community.
 ---
 
 <div align="center">
-    <small>Designed & crafted with care by Aman Sagar.</small><br/><br/>
     <a href="https://github.com/sponsors/AmanSagar0607" target="_blank">
         <img src="https://img.shields.io/badge/⭐_Star_this_repo-FF4500?style=for-the-badge&logo=github&logoColor=white" alt="Star this repo">
     </a>
+    <br/><br/>
+    <sub>Made with ❤️ by <a href="https://amansagar.in">Aman Sagar</a> | <a href="https://x.com/AmanSagar0607a">@AmanSagar0607a</a></sub>
 </div>
