@@ -1,499 +1,360 @@
-# Aman Platform — Architecture Reference
+# ARCHITECTURE
+
+> Target architecture for Context Infrastructure Platform.
+
+---
 
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           AMAN PLATFORM                                     │
-├─────────────────────────────────┬───────────────────────────────────────────┤
-│         AmanAgentLab            │              AmanCrawl                    │
-│    Personal AI Operating System │       Web Intelligence Infrastructure    │
-├─────────────────────────────────┼───────────────────────────────────────────┤
-│  Memory · Artifacts · RAG       │   Search · Crawl · Scrape · Extract      │
-│  Agent Workflows · MCP          │   Browser · API · CLI · SDK · MCP        │
-└──────────────┬──────────────────┴──────────────────┬────────────────────────┘
-               │                                     │
-               └─────────────┬───────────────────────┘
-                             │
-                    ┌────────▼────────┐
-                    │   CrewAI Layer  │
-                    │  Orchestration  │
-                    └────────┬────────┘
-                             │
-            ┌────────────────┼────────────────┐
-            │                │                │
-     ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐
-     │  Crawl4AI   │  │ Jina Reader │  │ ScrapeGraph │
-     │  LLM Scraper│  │             │  │     AI      │
-     └─────────────┘  └─────────────┘  └─────────────┘
-```
-
----
-
-## Entry Point — API / MCP Server Trigger
-
-```
-POST /api/agent/execute
-POST /api/amancrawl/scrape
-POST /api/amancrawl/crawl
-POST /api/amancrawl/search
-POST /api/amancrawl/map
-
-MCP Tools:
-  amancrawl.scrape
-  amancrawl.crawl
-  amancrawl.search
-  amancrawl.map
-  amancrawl.extract
-```
-
-**Why**: Single entry point for all agent operations. The API/MCP server routes requests to the CrewAI orchestration layer.
-
----
-
-## Orchestration — CrewAI
-
-### Why CrewAI?
-
-| Metric | CrewAI | LangGraph |
-|--------|--------|-----------|
-| Speed | 5.76× faster | Baseline |
-| GitHub Stars | 53k+ | 10k+ |
-| Independence | LangChain-free | LangChain-dependent |
-| Multi-agent | Crews (autonomous) | Manual coordination |
-| Event-driven | Flows | Limited |
-| Tool integration | Native MCP | Manual |
-
-### CrewAI Architecture
-
-```
 ┌─────────────────────────────────────────────────────────────┐
-│                      CrewAI Runtime                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │    Crews     │    │    Flows     │    │   Tasks      │  │
-│  │  (Autonomous │    │ (Event-      │    │  (Work units)│  │
-│  │   multi-     │    │  driven      │    │              │  │
-│  │   agent)     │    │  orchestrate)│    │              │  │
-│  └──────┬───────┘    └──────┬───────┘    └──────┬───────┘  │
-│         │                   │                   │          │
-│         └───────────────────┼───────────────────┘          │
-│                             │                              │
-│                    ┌────────▼────────┐                     │
-│                    │   Agent Pool    │                     │
-│                    │  (Specialized)  │                     │
-│                    └────────┬────────┘                     │
-│                             │                              │
-│                    ┌────────▼────────┐                     │
-│                    │   Tool Registry │                     │
-│                    │  (Crawl/Scrape) │                     │
-│                    └─────────────────┘                     │
-│                                                             │
+│                    CLIENTS                                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │ Python   │  │ TypeScript│  │   CLI    │  │   MCP    │   │
+│  │ SDK      │  │ SDK      │  │          │  │ Clients  │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
+│       └──────────────┼─────────────┼──────────────┘         │
+└──────────────────────┼─────────────┼────────────────────────┘
+                       │             │
+                       ▼             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    API SERVER (FastAPI)                       │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │  Memory  │  │  Search  │  │  Crawl   │  │ Knowledge│   │
+│  │  Routes  │  │  Routes  │  │  Routes  │  │  Routes  │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
+│       └──────────────┼─────────────┼──────────────┘         │
+│                      │             │                         │
+│  ┌───────────────────┴─────────────┴───────────────────┐   │
+│  │              Middleware (Auth, Rate Limit)            │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  CONTEXT CORE (Python)                       │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │  Memory  │  │ Retrieval│  │Knowledge │  │  Crawl   │   │
+│  │ Service  │  │ Pipeline │  │ Service  │  │ Service  │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘   │
+│       │              │              │              │         │
+│  ┌────┴─────┐  ┌────┴─────┐  ┌────┴─────┐  ┌────┴─────┐  │
+│  │Embeddings│  │ Vector   │  │ Graph    │  │ Search   │  │
+│  │ Service  │  │ Search   │  │ Queries  │  │ Router   │  │
+│  └──────────┘  │ + BM25   │  └──────────┘  └──────────┘  │
+│                │ + Rerank  │                                │
+│                └──────────┘                                 │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
+│  │   MCP    │  │ Context  │  │   LLM    │                  │
+│  │  Server  │  │ Assembly │  │ Service  │                  │
+│  └──────────┘  └──────────┘  └──────────┘                  │
+└─────────────────────────────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  PostgreSQL + pgvector                        │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │ memories │  │ kg_ent-  │  │ users    │  │ usage_   │   │
+│  │ +embeds  │  │ ities    │  │ sessions │  │ records  │   │
+│  └──────────┘  │ +embeds  │  └──────────┘  └──────────┘   │
+│                └──────────┘                                  │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
+│  │ kg_rel-  │  │ con-     │  │ plans    │                  │
+│  │ ations   │  │ versat-  │  │ subscr-  │                  │
+│  │          │  │ ions     │  │ iptions  │                  │
+│  └──────────┘  └──────────┘  └──────────┘                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Crew Definition
+---
 
-```python
-from crewai import Agent, Task, Crew
+## Directory Structure
 
-# Define specialized agents
-crawl_agent = Agent(
-    role="Web Crawler",
-    goal="Deep crawl websites following links, handle JS-rendered pages",
-    backstory="Expert in web crawling with Playwright and async operations",
-    tools=[crawl4ai_tool],
-    verbose=True,
-)
-
-scrape_agent = Agent(
-    role="Data Extractor",
-    goal="Extract structured data from web pages using LLM function calling",
-    backstory="Expert in converting unstructured web content to typed schemas",
-    tools=[llm_scraper_tool],
-    verbose=True,
-)
-
-read_agent = Agent(
-    role="Quick Reader",
-    goal="Instantly read and summarize web pages",
-    backstory="Fast reader using Jina Reader API for zero-setup page access",
-    tools=[jina_reader_tool],
-    verbose=True,
-)
-
-graph_agent = Agent(
-    role="Flexible Scraper",
-    goal="Use natural language prompts to extract specific data from pages",
-    backstory="Expert in prompt-driven scraping with ScrapeGraphAI",
-    tools=[scrapegraph_tool],
-    verbose=True,
-)
-
-# Define tasks
-crawl_task = Task(
-    description="Crawl {url} and extract all internal pages",
-    expected_output="List of pages with titles and content",
-    agent=crawl_agent,
-)
-
-scrape_task = Task(
-    description="Extract structured data from {url} using schema: {schema}",
-    expected_output="JSON object matching the provided schema",
-    agent=scrape_agent,
-)
-
-# Create crew
-web_intelligence_crew = Crew(
-    agents=[crawl_agent, scrape_agent, read_agent, graph_agent],
-    tasks=[crawl_task, scrape_task],
-    verbose=True,
-)
+```
+context-platform/
+├── apps/
+│   ├── server/                    # FastAPI API server
+│   │   ├── main.py               # App entry point
+│   │   ├── config.py             # Server configuration
+│   │   ├── routes/
+│   │   │   ├── memory.py         # POST/GET/PUT/DELETE /api/v1/memory
+│   │   │   ├── search.py         # POST /api/v1/search/*
+│   │   │   ├── crawl.py          # POST /api/v1/crawl/*
+│   │   │   ├── knowledge.py      # POST/GET/DELETE /api/v1/knowledge/*
+│   │   │   ├── mcp.py            # POST /api/v1/mcp
+│   │   │   ├── auth.py           # POST /api/v1/auth/*
+│   │   │   └── health.py         # GET /api/v1/health
+│   │   ├── middleware/
+│   │   │   ├── auth.py           # API key + JWT auth
+│   │   │   └── rate_limit.py     # Rate limiting by API key
+│   │   ├── services/
+│   │   │   ├── subscription.py   # Subscription management
+│   │   │   ├── payment.py        # BaseUPI integration
+│   │   │   ├── oauth.py          # Google/GitHub OAuth
+│   │   │   └── auth.py           # Email/password auth
+│   │   ├── Dockerfile
+│   │   └── requirements.txt
+│   └── web/                       # Next.js dashboard (minimal)
+│       ├── app/
+│       ├── components/
+│       └── package.json
+├── packages/
+│   ├── context-core/              # Core business logic
+│   │   ├── __init__.py
+│   │   ├── config.py             # Shared configuration
+│   │   ├── llm.py                # OpenRouter LLM service
+│   │   ├── memory/
+│   │   │   ├── __init__.py
+│   │   │   ├── service.py        # MemoryService class
+│   │   │   ├── models.py         # Pydantic models
+│   │   │   └── agent.py          # Memory agent logic
+│   │   ├── retrieval/
+│   │   │   ├── __init__.py
+│   │   │   ├── pipeline.py       # Full retrieval pipeline
+│   │   │   ├── vector_search.py  # pgvector search
+│   │   │   ├── bm25_search.py    # PostgreSQL FTS
+│   │   │   ├── fusion.py         # RRF fusion
+│   │   │   ├── reranker.py       # Cross-encoder re-ranking
+│   │   │   ├── chunking.py       # Recursive chunker
+│   │   │   └── expansion.py      # Query expansion (HyDE, multi-query)
+│   │   ├── knowledge/
+│   │   │   ├── __init__.py
+│   │   │   ├── service.py        # KnowledgeService class
+│   │   │   ├── models.py         # Entity, Relationship models
+│   │   │   └── agent.py          # Knowledge extraction agent
+│   │   ├── crawl/
+│   │   │   ├── __init__.py
+│   │   │   ├── service.py        # CrawlService class
+│   │   │   ├── providers/
+│   │   │   │   ├── crawl4ai.py   # Crawl4AI provider
+│   │   │   │   ├── jina.py       # Jina Reader provider
+│   │   │   │   └── httpx.py      # httpx fallback
+│   │   │   ├── browser.py        # Playwright automation
+│   │   │   ├── extract.py        # AI extraction
+│   │   │   └── agent.py          # Research agent
+│   │   ├── search/
+│   │   │   ├── __init__.py
+│   │   │   ├── router.py         # Multi-provider search
+│   │   │   └── providers/
+│   │   │       ├── tavily.py
+│   │   │       ├── brave.py
+│   │   │       ├── searxng.py
+│   │   │       ├── duckduckgo.py
+│   │   │       └── google.py
+│   │   ├── embeddings/
+│   │   │   ├── __init__.py
+│   │   │   └── service.py        # Pluggable embedding service
+│   │   ├── mcp/
+│   │   │   ├── __init__.py
+│   │   │   ├── server.py         # MCP server
+│   │   │   ├── tools/
+│   │   │   │   ├── memory.py     # Memory MCP tools
+│   │   │   │   ├── search.py     # Search MCP tools
+│   │   │   │   ├── crawl.py      # Crawl MCP tools
+│   │   │   │   └── knowledge.py  # Knowledge MCP tools
+│   │   │   └── transport.py      # HTTP/SSE transport
+│   │   ├── context/
+│   │   │   ├── __init__.py
+│   │   │   ├── assembly.py       # Context window assembly
+│   │   │   └── compression.py    # Context compression
+│   │   └── agent/
+│   │       ├── __init__.py
+│   │       ├── router.py         # Agent routing
+│   │       └── planner.py        # LLM-based planner
+│   ├── context-db/                # Database
+│   │   ├── migrations/
+│   │   │   ├── 001_core.sql      # Users, auth, conversations
+│   │   │   ├── 002_memory.sql    # Unified memories + pgvector
+│   │   │   ├── 003_knowledge.sql # KG entities + embeddings
+│   │   │   └── 004_subscriptions.sql # Plans, usage
+│   │   └── seed.sql
+│   └── context-types/             # TypeScript types
+│       └── src/
+├── sdk/
+│   ├── python/                    # Python SDK
+│   │   ├── context_ai/
+│   │   │   ├── __init__.py
+│   │   │   ├── client.py
+│   │   │   ├── memory.py
+│   │   │   ├── search.py
+│   │   │   ├── crawl.py
+│   │   │   ├── knowledge.py
+│   │   │   ├── types.py
+│   │   │   └── _http.py
+│   │   ├── pyproject.toml
+│   │   └── tests/
+│   └── typescript/                # TypeScript SDK
+│       ├── src/
+│       │   ├── index.ts
+│       │   ├── client.ts
+│       │   ├── memory.ts
+│       │   ├── search.ts
+│       │   ├── crawl.ts
+│       │   ├── knowledge.ts
+│       │   ├── types.ts
+│       │   └── _http.ts
+│       ├── package.json
+│       └── tsconfig.json
+├── cli/                           # CLI tool
+│   ├── context_cli/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── commands/
+│   │   │   ├── login.py
+│   │   │   ├── memory.py
+│   │   │   ├── search.py
+│   │   │   ├── crawl.py
+│   │   │   ├── knowledge.py
+│   │   │   ├── mcp.py
+│   │   │   ├── usage.py
+│   │   │   └── doctor.py
+│   │   ├── config.py
+│   │   └── _output.py
+│   └── pyproject.toml
+├── docs/                          # Documentation
+│   ├── docs/
+│   ├── src/
+│   ├── docusaurus.config.js
+│   └── package.json
+├── examples/
+│   ├── python/
+│   ├── typescript/
+│   └── mcp/
+├── docker-compose.yml
+├── docker-compose.dev.yml
+├── pyproject.toml
+└── README.md
 ```
 
 ---
 
-## Specialized Agents
+## Code Migration Map
 
-### 1. Crawl Agent — Crawl4AI
+| Current | Future | Action |
+|---------|--------|--------|
+| `backend/main.py` | `apps/server/main.py` | Move |
+| `backend/app/routes/*` | `apps/server/routes/*` | Move |
+| `backend/app/config.py` | `apps/server/config.py` | Move |
+| `backend/app/auth_middleware.py` | `apps/server/middleware/auth.py` | Move |
+| `backend/services/memory_store.py` | DELETE | Replace |
+| `backend/services/semantic_memory.py` | DELETE | Replace |
+| `backend/services/knowledge_graph.py` | `packages/context-core/knowledge/service.py` | Move |
+| `backend/services/crawl_service.py` | `packages/context-core/crawl/service.py` | Move |
+| `backend/services/crawl4ai_service.py` | `packages/context-core/crawl/providers/crawl4ai.py` | Move |
+| `backend/services/search_router.py` | `packages/context-core/search/router.py` | Move |
+| `backend/services/browser_automation.py` | `packages/context-core/crawl/browser.py` | Move |
+| `backend/services/agent_service.py` | `packages/context-core/crawl/extract.py` | Move |
+| `backend/services/postgres_store.py` | `packages/context-core/db.py` | Move |
+| `backend/services/openrouter.py` | `packages/context-core/llm.py` | Move |
+| `backend/services/mcp_server.py` | `packages/context-core/mcp/server.py` | Move |
+| `backend/agents/retrieval_agent.py` | `packages/context-core/retrieval/` | Merge |
+| `backend/agents/memory_agent.py` | `packages/context-core/memory/agent.py` | Move |
+| `backend/agents/research_agent.py` | `packages/context-core/crawl/agent.py` | Move |
+| `backend/agents/knowledge_agent.py` | `packages/context-core/knowledge/agent.py` | Move |
+| `backend/agents/router.py` | `packages/context-core/agent/router.py` | Move |
+| `backend/rag/retriever.py` | DELETE | Replace |
+| `backend/rag/prompt_builder.py` | `packages/context-core/context/` | Move |
+| `backend/embeddings/embedder.py` | `packages/context-core/embeddings/service.py` | Move |
+| `backend/vector_db/*` | DELETE | Replace with pgvector |
+| `backend/services/chunking.py` | `packages/context-core/retrieval/chunking.py` | Move |
 
-```
-┌─────────────────────────────────────────────┐
-│              Crawl Agent                    │
-│              (Crawl4AI)                     │
-├─────────────────────────────────────────────┤
-│  Role: Deep Web Crawler                     │
-│  Goal: Multi-page crawling with JS support  │
-│                                             │
-│  Capabilities:                              │
-│  ✓ 100% open-source, async-first            │
-│  ✓ JS rendering via Playwright              │
-│  ✓ Outputs clean Markdown for LLMs          │
-│  ✓ Best for: deep crawls, pipelines         │
-│                                             │
-│  Input: URL + max_pages + depth             │
-│  Output: Markdown pages + link graph        │
-└─────────────────────────────────────────────┘
-```
+### Files Deleted
 
-**Implementation**:
-```python
-# pip install crawl4ai
-
-from crawl4ai import AsyncWebCrawler, CrawlerRunConfig
-
-async def crawl_site(url: str, max_pages: int = 10):
-    config = CrawlerRunConfig(
-        word_count_threshold=10,
-        exclude_external_links=True,
-    )
-    
-    async with AsyncWebCrawler() as crawler:
-        results = await crawler.arun(
-            url=url,
-            config=config,
-        )
-        return results
-```
-
-### 2. Read Agent — Jina Reader
-
-```
-┌─────────────────────────────────────────────┐
-│              Read Agent                     │
-│              (Jina Reader)                  │
-├─────────────────────────────────────────────┤
-│  Role: Quick Page Reader                    │
-│  Goal: Instant single-page content access   │
-│                                             │
-│  Capabilities:                              │
-│  ✓ Zero-install: GET s.jina.ai/URL          │
-│  ✓ Returns clean LLM-ready markdown         │
-│  ✓ Free tier available                      │
-│  ✓ Best for: quick single-page reads        │
-│                                             │
-│  Input: URL                                 │
-│  Output: Clean markdown content             │
-└─────────────────────────────────────────────┘
-```
-
-**Implementation**:
-```python
-import httpx
-
-async def read_page(url: str) -> str:
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"https://s.jina.ai/{url}")
-        return response.text
-```
-
-### 3. Graph Agent — LLM Scraper (TypeScript)
-
-```
-┌─────────────────────────────────────────────┐
-│              Graph Agent                    │
-│              (LLM Scraper)                  │
-├─────────────────────────────────────────────┤
-│  Role: Structured Data Extractor            │
-│  Goal: Convert pages to typed JSON schemas  │
-│                                             │
-│  Capabilities:                              │
-│  ✓ Function calling → typed schemas         │
-│  ✓ Works with any LLM provider              │
-│  ✓ Returns validated JSON objects           │
-│  ✓ Best for: structured data extraction     │
-│                                             │
-│  Input: URL + JSON schema                   │
-│  Output: Validated JSON object              │
-└─────────────────────────────────────────────┘
-```
-
-**Implementation**:
-```typescript
-// npm install llm-scraper
-
-import { LLMScraper } from 'llm-scraper';
-
-const scraper = new LLMScraper('openai');
-
-const schema = {
-  type: 'object',
-  properties: {
-    title: { type: 'string' },
-    description: { type: 'string' },
-    links: { type: 'array', items: { type: 'string' } },
-  },
-};
-
-const result = await scraper.loadUrl(url, schema);
-```
-
-### 4. Read Agent — ScrapeGraphAI
-
-```
-┌─────────────────────────────────────────────┐
-│              Graph Agent                    │
-│              (ScrapeGraphAI)                │
-├─────────────────────────────────────────────┤
-│  Role: Flexible Prompt Scraper              │
-│  Goal: Extract data using natural language  │
-│                                             │
-│  Capabilities:                              │
-│  ✓ Graph-based scraping pipelines           │
-│  ✓ SmartScraperGraph: prompt → data         │
-│  ✓ Supports local LLMs (Ollama)             │
-│  ✓ Best for: AI-driven flexible scrape      │
-│                                             │
-│  Input: URL + natural language prompt       │
-│  Output: Extracted data as JSON             │
-└─────────────────────────────────────────────┘
-```
-
-**Implementation**:
-```python
-# pip install scrapegraphai
-
-from scrapegraphai.graphs import SmartScraperGraph
-
-graph_config = {
-    "llm": "ollama/llama3",
-    "verbose": True,
-    "headless": True,
-}
-
-smart_scraper = SmartScraperGraph(
-    prompt="Extract all product names and prices",
-    source="https://example.com/products",
-    config=graph_config,
-)
-
-result = smart_scraper.run()
-```
+| File | Reason |
+|------|--------|
+| `backend/services/memory_store.py` | SQLite replaced |
+| `backend/services/semantic_memory.py` | SQLite replaced |
+| `backend/vector_db/*` | Milvus replaced |
+| `backend/rag/retriever.py` | Merged into retrieval |
+| `backend/rag/prompt_builder.py` | Merged into context |
+| `backend/agents/planner.py` | Replaced by LLM planner |
+| `backend/agents/citation_agent.py` | Merged into retrieval |
+| `backend/agents/workflow_agent.py` | Postponed |
+| `backend/agents/tools.py` | CrewAI postponed |
+| `backend/agents/flows.py` | CrewAI postponed |
+| `backend/agents/crawl_agents.py` | CrewAI postponed |
+| `backend/services/ag_ui_events.py` | Workspace feature |
+| `backend/services/pdf_*.py` | Workspace feature |
+| `backend/services/tokenizer_viz.py` | Workspace feature |
+| `backend/services/document_store.py` | Workspace feature |
+| `backend/services/pipeline_runner.py` | Workspace feature |
+| `backend/services/web_search.py` | Merged into search router |
 
 ---
 
-## Tool Selection Guide
+## API Endpoints
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    QUICK PICK GUIDE                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Fast single-page read                                          │
-│    → Jina Reader (zero setup, one HTTP call)                    │
-│                                                                 │
-│  Multi-page / JS-heavy crawl                                    │
-│    → Crawl4AI (async, Playwright, clean MD)                     │
-│                                                                 │
-│  Typed structured output                                        │
-│    → LLM Scraper (TS, function calling)                         │
-│                                                                 │
-│  Prompt-driven flexible scrape                                  │
-│    → ScrapeGraphAI (Python, local LLM OK)                       │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-| Need | Tool | Why |
-|------|------|-----|
-| Instant single-page read | **Jina Reader** (`s.jina.ai/URL`) | Zero install — just an HTTP GET. Returns clean markdown. |
-| Deep / JS-rendered crawls | **Crawl4AI** | Async, Playwright-backed, outputs LLM-friendly markdown natively. 100% free. |
-| Typed structured JSON | **LLM Scraper** (TypeScript) | Uses function calling to convert any page to a validated schema object. |
-| Prompt-driven flexible scrape | **ScrapeGraphAI** | Natural language → data, supports Ollama (local LLMs, fully free). |
-
----
-
-## Output + Future RAG Layer
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    OUTPUT PIPELINE                              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Scraped Data                                                   │
-│    ├── Markdown (Crawl4AI, Jina Reader)                         │
-│    ├── JSON (LLM Scraper, ScrapeGraphAI)                       │
-│    └── HTML (raw)                                               │
-│         │                                                       │
-│         ▼                                                       │
-│  Chunking                                                       │
-│    ├── Markdown → semantic chunks                               │
-│    ├── JSON → schema-aware chunks                               │
-│    └── HTML → clean text chunks                                 │
-│         │                                                       │
-│         ▼                                                       │
-│  Embedding                                                      │
-│    ├── sentence-transformers (local)                            │
-│    ├── OpenAI embeddings (API)                                  │
-│    └── Ollama embeddings (local)                                │
-│         │                                                       │
-│         ▼                                                       │
-│  Vector Store                                                   │
-│    ├── Chroma (local, lightweight)                              │
-│    ├── Qdrant (local/cloud, high-performance)                   │
-│    ├── Weaviate (cloud, GraphQL)                                │
-│    └── Milvus/Zilliz (existing infrastructure)                  │
-│         │                                                       │
-│         ▼                                                       │
-│  RAG Retrieval                                                  │
-│    ├── Similarity search                                        │
-│    ├── Hybrid search (keyword + semantic)                       │
-│    └── Re-ranking                                               │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/v1/memory` | Store memory |
+| GET | `/api/v1/memory/:id` | Get memory |
+| PUT | `/api/v1/memory/:id` | Update memory |
+| DELETE | `/api/v1/memory/:id` | Delete memory |
+| POST | `/api/v1/memory/search` | Semantic search |
+| POST | `/api/v1/memory/context` | Get context window |
+| GET | `/api/v1/memory/timeline` | Episodic timeline |
+| GET | `/api/v1/memory/related` | Related memories |
+| POST | `/api/v1/memory/batch` | Batch operations |
+| POST | `/api/v1/search/web` | Web search |
+| POST | `/api/v1/search/internal` | Internal hybrid search |
+| POST | `/api/v1/crawl/scrape` | Scrape URL |
+| POST | `/api/v1/crawl/crawl` | Crawl website |
+| POST | `/api/v1/crawl/map` | Map website |
+| POST | `/api/v1/crawl/extract` | AI extraction |
+| POST | `/api/v1/crawl/browser` | Playwright render |
+| POST | `/api/v1/knowledge/entities` | Create entity |
+| GET | `/api/v1/knowledge/entities/:id` | Get entity |
+| DELETE | `/api/v1/knowledge/entities/:id` | Delete entity |
+| POST | `/api/v1/knowledge/relationships` | Create relationship |
+| GET | `/api/v1/knowledge/graph/:id` | Get entity graph |
+| POST | `/api/v1/knowledge/search` | Search entities |
+| POST | `/api/v1/mcp` | MCP JSON-RPC |
+| GET | `/api/v1/mcp/tools` | List MCP tools |
+| POST | `/api/v1/auth/signup` | Register |
+| POST | `/api/v1/auth/login` | Login |
+| GET | `/api/v1/health` | Health check |
 
 ---
 
-## MCP Integration
+## Database Schema
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    MCP TOOL ENDPOINTS                           │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  amancrawl.scrape                                               │
-│    Input: { url: string, formats: string[] }                    │
-│    Output: { markdown: string, json: object, html: string }     │
-│                                                                 │
-│  amancrawl.crawl                                                │
-│    Input: { url: string, max_pages: number }                    │
-│    Output: { pages: Page[], links: string[] }                   │
-│                                                                 │
-│  amancrawl.search                                               │
-│    Input: { query: string, num_results: number }                │
-│    Output: { results: SearchResult[] }                          │
-│                                                                 │
-│  amancrawl.map                                                  │
-│    Input: { url: string }                                       │
-│    Output: { links: string[], structure: object }               │
-│                                                                 │
-│  amancrawl.extract                                              │
-│    Input: { url: string, schema: JSONSchema }                   │
-│    Output: { data: object }                                     │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Core Tables (001_core.sql)
 
----
+- `users` — User accounts
+- `user_profiles` — Profile data
+- `auth_identities` — Auth providers
+- `user_sessions` — Sessions
+- `api_tokens` — API tokens
+- `roles` — RBAC roles
+- `permissions` — RBAC permissions
+- `conversations` — Chat threads
+- `messages` — Chat messages
 
-## Implementation Roadmap
+### Memory Tables (002_memory.sql)
 
-### Phase 1: Core Crawl Tools (Current)
-- [x] Basic scrape (BeautifulSoup + httpx)
-- [x] Basic crawl (link following)
-- [x] Basic map (site structure)
-- [x] Basic search (DuckDuckGo)
+- `memories` — Unified memory store with pgvector
+- `memory_links` — Graph relationships between memories
+- `conversation_messages` — Conversation history
 
-### Phase 2: CrewAI Integration
-- [ ] Install CrewAI
-- [ ] Define specialized agents
-- [ ] Register crawl tools
-- [ ] Create Flow for request routing
-- [ ] Wire to API endpoints
+### Knowledge Tables (003_knowledge.sql)
 
-### Phase 3: Advanced Tools
-- [ ] Crawl4AI integration (JS rendering)
-- [ ] Jina Reader integration (fast reads)
-- [ ] LLM Scraper integration (typed extraction)
-- [ ] ScrapeGraphAI integration (prompt-driven)
+- `kg_entities` — Knowledge graph entities with embeddings
+- `kg_relationships` — Entity relationships
+- `entity_memory_links` — Entity-to-memory connections
 
-### Phase 4: RAG Layer
-- [ ] Chunking pipeline
-- [ ] Embedding generation
-- [ ] Vector store integration
-- [ ] Retrieval API
+### Subscription Tables (004_subscriptions.sql)
 
-### Phase 5: MCP + SDK
-- [ ] MCP tool definitions
-- [ ] TypeScript SDK
-- [ ] Python SDK
-- [ ] CLI tool
+- `plans` — Plan definitions
+- `plan_limits` — Per-plan rate limits
+- `subscriptions` — User subscriptions
+- `usage_records` — Usage events
+- `usage_aggregates` — Pre-computed usage
 
 ---
 
-## Architecture Decision Records
-
-### ADR-001: CrewAI Over LangGraph
-
-**Decision**: Use CrewAI as the orchestration layer.
-
-**Rationale**:
-- 5.76× faster than LangGraph
-- LangChain-independent (no vendor lock-in)
-- Native multi-agent support (Crews)
-- Event-driven orchestration (Flows)
-- Larger community (53k+ stars)
-
-### ADR-002: Four Tool Strategy
-
-**Decision**: Implement four specialized crawl tools instead of one monolithic solution.
-
-**Rationale**:
-- Different use cases need different tools
-- Jina Reader for instant reads (zero setup)
-- Crawl4AI for deep crawls (JS rendering)
-- LLM Scraper for typed extraction (schema validation)
-- ScrapeGraphAI for flexible scraping (prompt-driven)
-
-### ADR-003: RAG as Optional Future Layer
-
-**Decision**: Make RAG optional, not required for MVP.
-
-**Rationale**:
-- Core crawl/scrape functionality works without RAG
-- RAG adds complexity (embedding, vector store)
-- Can be added incrementally
-- Existing Milvus/Zilliz infrastructure supports it
-
----
-
-## References
-
-- [CrewAI Documentation](https://docs.crewai.com/)
-- [Crawl4AI GitHub](https://github.com/unclecode/crawl4ai)
-- [Jina Reader](https://jina.ai/reader/)
-- [LLM Scraper](https://github.com/anthropics/llm-scraper)
-- [ScrapeGraphAI](https://github.com/ScrapeGraphAI/Scrapegraph-ai)
-- [MCP Specification](https://modelcontextprotocol.io/)
+*Last updated: 2026-06-19*

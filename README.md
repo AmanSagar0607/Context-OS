@@ -1,286 +1,391 @@
-# AI PDF Learning Workspace
+# Context OS
 
-Upload a PDF, run a RAG pipeline, chat with the document, and persist auth and chat history with PostgreSQL.
+**AI can finally remember.**
 
-## Stack
+The open-source context infrastructure that gives AI agents memory, web intelligence, and structured knowledge — via a single API and MCP server.
 
-- Next.js frontend
-- FastAPI backend
-- Zilliz Cloud / Milvus for vector retrieval
-- PostgreSQL for auth, sessions, conversations, and chat history
-- pgAdmin for database inspection
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-## What This App Does
+---
 
-- sign up and log in with email/password
-- upload a PDF
-- extract, chunk, tokenize, embed, and store vector data
-- ask questions about the uploaded document
-- persist users, sessions, and recent chats in Postgres
+## What is Context OS?
+
+Context OS is a unified developer platform that provides:
+
+| Module | Purpose | Competitor |
+|--------|---------|------------|
+| **Memory** | Persistent agent memory with semantic search | Mem0, Zep |
+| **Search** | Hybrid web + internal search | Firecrawl (partial) |
+| **Crawl** | Web intelligence with fallback chain | Firecrawl, Crawl4AI |
+| **Knowledge** | Entity/relationship extraction and graph | Custom |
+| **MCP** | MCP servers for all of the above | Custom |
+
+**No one else has all five capabilities in one platform.**
+
+---
+
+## Quick Start
+
+### 1. Install
+
+```bash
+git clone https://github.com/AmanSagar0607/Context-OS.git
+cd Context-OS
+pip install -e packages/context-core
+```
+
+### 2. Start Database
+
+```bash
+docker compose up -d postgres
+```
+
+### 3. Run Migrations
+
+```bash
+psql -U postgres -d app-agent -f packages/context-db/migrations/001_core.sql
+psql -U postgres -d app-agent -f packages/context-db/migrations/002_memory.sql
+psql -U postgres -d app-agent -f packages/context-db/migrations/003_knowledge.sql
+psql -U postgres -d app-agent -f packages/context-db/migrations/004_subscriptions.sql
+```
+
+### 4. Store Your First Memory
+
+```python
+from context_core.memory.service import MemoryService
+from context_core.memory.models import MemoryCreate
+
+# Initialize service (requires PostgreSQL + pgvector)
+service = MemoryService(pool, embeddings)
+
+# Store a memory
+memory = await service.add("user-123", MemoryCreate(
+    content="User prefers dark mode and concise responses",
+    memory_type="semantic",
+    importance="high",
+    tags=["preference", "ui"],
+))
+
+# Search memories
+results = await service.search(MemorySearchRequest(
+    query="What UI preferences does the user have?",
+    user_id="user-123",
+))
+```
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    CLIENTS                                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │ Python   │  │ TypeScript│  │   CLI    │  │   MCP    │   │
+│  │ SDK      │  │ SDK      │  │          │  │ Clients  │   │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    API SERVER (FastAPI)                       │
+│  Memory Routes │ Search Routes │ Crawl Routes │ MCP         │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  CONTEXT CORE (Python)                       │
+│  Memory │ Retrieval │ Knowledge │ Crawl │ Search │ MCP      │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  PostgreSQL + pgvector                        │
+│  memories │ kg_entities │ users │ usage_records │ plans      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ## Project Structure
 
-```text
-my-ai-app/
-  app/                      Next.js app router pages
-  components/               frontend UI
-  lib/                      shared frontend helpers and types
-  services/                 frontend API clients
-  backend/
-    app/                    FastAPI config and routes
-    db/                     Postgres schema and docs
-    rag/                    retrieval and prompt building
-    services/               auth, memory, Postgres, upload helpers
-    scripts/                utility scripts
-    Dockerfile
-    requirements.txt
-  docker-compose.yml
-  .env.example
+```
+Context-OS/
+├── apps/
+│   ├── server/                    # FastAPI API server
+│   │   ├── main.py               # App entry point
+│   │   ├── routes/               # API endpoints
+│   │   └── middleware/           # Auth, rate limiting
+│   └── web/                      # Next.js dashboard (minimal)
+├── packages/
+│   ├── context-core/             # Core business logic
+│   │   ├── memory/               # Memory service
+│   │   ├── retrieval/            # Hybrid retrieval
+│   │   ├── knowledge/            # Knowledge graph
+│   │   ├── crawl/                # Web intelligence
+│   │   ├── search/               # Search router
+│   │   ├── embeddings/           # Embedding service
+│   │   └── mcp/                  # MCP server
+│   ├── context-db/               # Database migrations
+│   │   └── migrations/           # SQL migrations
+│   └── context-types/            # Shared TypeScript types
+├── sdk/
+│   ├── python/                   # Python SDK
+│   └── typescript/               # TypeScript SDK
+├── cli/                          # CLI tool
+├── docs/                         # Documentation
+└── examples/                     # Starter templates
 ```
 
-## Prerequisites
+---
 
-- Node.js
+## API Reference
+
+### Memory
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/memory` | Store a memory |
+| `GET` | `/api/v1/memory/:id` | Get a memory |
+| `PUT` | `/api/v1/memory/:id` | Update a memory |
+| `DELETE` | `/api/v1/memory/:id` | Delete a memory |
+| `POST` | `/api/v1/memory/search` | Semantic search |
+| `POST` | `/api/v1/memory/context` | Get context window |
+| `GET` | `/api/v1/memory` | List memories |
+| `GET` | `/api/v1/memory/:id/related` | Related memories |
+
+### Search
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/search/web` | Web search |
+| `POST` | `/api/v1/search/internal` | Internal hybrid search |
+
+### Crawl
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/crawl/scrape` | Scrape URL |
+| `POST` | `/api/v1/crawl/crawl` | Crawl website |
+| `POST` | `/api/v1/crawl/map` | Map website |
+| `POST` | `/api/v1/crawl/extract` | AI extraction |
+
+### Knowledge
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/knowledge/entities` | Create entity |
+| `GET` | `/api/v1/knowledge/entities/:id` | Get entity |
+| `DELETE` | `/api/v1/knowledge/entities/:id` | Delete entity |
+| `POST` | `/api/v1/knowledge/relationships` | Create relationship |
+| `GET` | `/api/v1/knowledge/graph/:id` | Get entity graph |
+
+### MCP
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/mcp` | MCP JSON-RPC |
+| `GET` | `/api/v1/mcp/tools` | List MCP tools |
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| API Server | FastAPI (Python 3.11+) |
+| Database | PostgreSQL + pgvector |
+| Embeddings | sentence-transformers (default) |
+| LLM | OpenRouter (GPT-4o-mini default) |
+| Payments | BaseUPI (zero-commission UPI) |
+| Frontend | Next.js 15, Tailwind CSS |
+| Auth | JWT + OAuth (Google, GitHub) |
+
+---
+
+## Database Schema
+
+### Core Tables
+
+- `users` — User accounts
+- `auth_identities` — Auth providers (password, Google, GitHub)
+- `user_sessions` — Sessions
+- `api_tokens` — API tokens
+- `conversations` — Chat threads
+- `messages` — Chat messages
+
+### Memory Tables
+
+- `memories` — Unified memory store with pgvector
+- `memory_links` — Graph relationships between memories
+- `conversation_messages` — Conversation history
+
+### Knowledge Tables
+
+- `kg_entities` — Knowledge graph entities with embeddings
+- `kg_relationships` — Entity relationships
+- `entity_memory_links` — Entity-to-memory connections
+
+### Subscription Tables
+
+- `plans` — Plan definitions (free, pro, team, enterprise)
+- `plan_limits` — Per-plan rate limits
+- `subscriptions` — User subscriptions
+- `usage_records` — Usage events
+
+---
+
+## Development
+
+### Prerequisites
+
 - Python 3.11+
+- Node.js 18+
 - Docker Desktop
-- npm
+- PostgreSQL 15+ (or via Docker)
 
-## 1. Environment Setup
+### Setup
 
-Copy the example env:
+```bash
+# Clone
+git clone https://github.com/AmanSagar0607/Context-OS.git
+cd Context-OS
 
-```powershell
-copy .env.example .env
-```
+# Install Python dependencies
+pip install -e packages/context-core
 
-Update `.env` with your real values for:
-
-- `OPENROUTER_API_KEY`
-- `MILVUS_ADDRESS`
-- `MILVUS_TOKEN`
-
-Important Postgres values already supported:
-
-```env
-USE_DOCKER_POSTGRES=false
-POSTGRES_LOCAL_HOST=localhost
-POSTGRES_DOCKER_HOST=postgres
-POSTGRES_PORT=5432
-POSTGRES_DB=app-agent
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=1234567890
-DATABASE_URL_LOCAL=postgresql://postgres:1234567890@localhost:5432/app-agent
-DATABASE_URL_DOCKER=postgresql://postgres:1234567890@postgres:5432/app-agent
-```
-
-## 2. Install Frontend Dependencies
-
-From the project root:
-
-```powershell
+# Install frontend dependencies
 npm install
+
+# Start database
+docker compose up -d postgres
+
+# Run tests
+cd packages/context-core
+pytest tests/ -v
 ```
 
-## 3. Install Backend Dependencies
+### Running
 
-From the project root:
+```bash
+# Start API server
+cd apps/server
+uvicorn main:app --reload --port 8000
 
-```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# Start frontend
+npm run dev
 ```
 
-## 4. Start PostgreSQL and pgAdmin
+---
 
-From the project root:
+## Testing
 
-```powershell
-docker compose up -d postgres pgadmin
+```bash
+# Run all context-core tests
+cd packages/context-core
+pytest tests/ -v
+
+# Run specific test file
+pytest tests/test_memory_models.py -v
+
+# Run with coverage
+pytest tests/ --cov=context_core
 ```
 
-pgAdmin:
+---
 
-- URL: `http://localhost:5050`
-- Email: `admin@local.dev`
-- Password: `admin123`
+## Deployment
 
-## 5. Apply the Postgres Schema
+### Docker
 
-From the project root:
-
-```powershell
-cd backend
-.\.venv\Scripts\python.exe .\scripts\init_postgres.py
+```bash
+docker compose up -d
 ```
 
-This creates the MVP tables for:
-
-- users
-- auth identities
-- user sessions
-- conversations
-- messages
-- retrieval sources
-- memory records
-
-## 6. Run the App
-
-You can run the app in two main ways.
-
-## Option A: Backend on Host Machine, Postgres in Docker
-
-Use this if you run FastAPI directly with `uvicorn`.
-
-Set:
+### Environment Variables
 
 ```env
+# Database
+DATABASE_URL=postgresql://postgres:password@localhost:5432/app-agent
 USE_DOCKER_POSTGRES=false
+
+# LLM
+OPENROUTER_API_KEY=your-key
+OPENROUTER_MODEL=openai/gpt-4o-mini
+
+# Embeddings
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+EMBEDDING_DIMENSION=384
+
+# Auth
+AMAN_JWT_SECRET=your-secret
+
+# Payments
+BASEUPI_SECRET_KEY=your-key
 ```
 
-Run backend:
+---
 
-```powershell
-cd backend
-.\.venv\Scripts\activate
-uvicorn main:app --reload --port 8000
-```
+## Roadmap
 
-Run frontend:
+### 30 Days — Launch Readiness
 
-```powershell
-npm run dev
-```
+- [x] Monorepo structure
+- [x] Unified memory system
+- [x] Database migrations
+- [ ] Hybrid retrieval pipeline
+- [ ] Python + TypeScript SDK
+- [ ] CLI tool
+- [ ] MCP server refactor
+- [ ] Documentation
+- [ ] Docker deployment
 
-Open:
+### 60 Days — Developer Adoption
 
-- Frontend: `http://localhost:3000`
-- Backend docs: `http://localhost:8000/docs`
-- Health: `http://localhost:8000/health`
+- LLM-based planner
+- Memory consolidation
+- HyDE query expansion
+- 100 GitHub stars
+- 10 external users
 
-## Option B: Full Docker Mode
+### 90 Days — Revenue
 
-Use this if you want backend + Postgres + pgAdmin all in Docker.
+- Cloud deployment
+- Usage-based billing (Polar)
+- 500 GitHub stars
+- 50 external users
+- 10 paying customers
 
-Set:
+See [ROADMAP.md](ROADMAP.md) for detailed plans.
 
-```env
-USE_DOCKER_POSTGRES=true
-```
+---
 
-Run:
+## Contributing
 
-```powershell
-docker compose up -d postgres pgadmin backend
-```
+Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
-If you still run Next.js locally:
+1. Fork the repo
+2. Create feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing`)
+5. Open Pull Request
 
-```powershell
-npm run dev
-```
+---
 
-## 7. Verify the Backend
+## License
 
-Run:
+MIT License. See [LICENSE](LICENSE) for details.
 
-```powershell
-Invoke-RestMethod -Uri http://127.0.0.1:8000/health | ConvertTo-Json -Depth 4
-```
+---
 
-For host-backend mode, you want:
+## Links
 
-- `postgres_connected: true`
-- `postgres_mode: "local"`
+- [GitHub](https://github.com/AmanSagar0607/Context-OS)
+- [Documentation](https://contextos.dev) (coming soon)
+- [API Reference](https://contextos.dev/api) (coming soon)
 
-For full Docker mode, you want:
+---
 
-- `postgres_connected: true`
-- `postgres_mode: "docker"`
-
-## 8. Verify the Database
-
-In pgAdmin, add a server with:
-
-- Host: `postgres`
-- Port: `5432`
-- Database: `app-agent`
-- Username: `postgres`
-- Password: `1234567890`
-
-Useful tables:
-
-- `users`
-- `auth_identities`
-- `user_sessions`
-- `conversations`
-- `messages`
-- `message_retrieval_sources`
-
-## 9. Test the Main Flow
-
-1. Sign up
-2. Log in
-3. Upload a PDF
-4. Wait for the pipeline to finish
-5. Ask a question in chat
-6. Refresh pgAdmin and confirm rows appear in Postgres
-
-## Common Commands
-
-Start Docker services:
-
-```powershell
-docker compose up -d postgres pgadmin
-```
-
-Run backend locally:
-
-```powershell
-cd backend
-.\.venv\Scripts\activate
-uvicorn main:app --reload --port 8000
-```
-
-Run frontend locally:
-
-```powershell
-npm run dev
-```
-
-Check Docker containers:
-
-```powershell
-docker compose ps
-```
-
-Check backend logs in Docker:
-
-```powershell
-docker compose logs backend
-```
-
-Rebuild backend container:
-
-```powershell
-docker compose build --no-cache backend
-docker compose up -d backend
-```
-
-## Notes
-
-- The backend Docker image is configured for CPU-only PyTorch to avoid heavy CUDA downloads.
-- Zilliz / Milvus is managed remotely, not run locally in Docker.
-- The health endpoint now reports Postgres mode and connection state.
-
-## Developer Docs
-
-Additional repo docs:
-
-- [BACKEND_SETUP.md](./BACKEND_SETUP.md)
-- [DOCKER_SETUP.md](./DOCKER_SETUP.md)
-- [PGADMIN_SETUP.md](./PGADMIN_SETUP.md)
-- [DOCKER_POSTGRES_MODE.md](./DOCKER_POSTGRES_MODE.md)
-- [MEMORY_UPGRADE_PLAN.md](./MEMORY_UPGRADE_PLAN.md)
-- [RECENT_DEV_CHANGES.md](./RECENT_DEV_CHANGES.md)
-- [backend/db/POSTGRES_MVP_DESIGN.md](./backend/db/POSTGRES_MVP_DESIGN.md)
+**Built with care for the AI agent community.**
