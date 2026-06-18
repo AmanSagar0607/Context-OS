@@ -22,6 +22,8 @@
     <a href="https://github.com/AmanSagar0607/Context-OS/pkgs/context-core" alt="Package">
         <img alt="Package" src="https://img.shields.io/badge/package-context--core-blue"></a>
     <br/>
+    <a href="https://discord.gg/YrSpR43UB" alt="Discord" target="_blank">
+        <img alt="Discord" src="https://img.shields.io/discord/YOUR_SERVER_ID?style=social&logo=discord&logoColor=white"></a>
     <a href="https://x.com/AmanSagar0607a" alt="X (formerly Twitter)" target="_blank">
         <img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/AmanSagar0607a?style=social&logo=x"></a>
     <a href="https://github.com/AmanSagar0607" alt="GitHub" target="_blank">
@@ -52,6 +54,7 @@
 <p align="center">
     <a href="https://amansagar.in" target="_blank">🌐 Website</a> &middot;
     <a href="https://x.com/AmanSagar0607a" target="_blank">𝕏 Twitter</a> &middot;
+    <a href="https://discord.gg/YrSpR43UB" target="_blank">💬 Discord</a> &middot;
     <a href="https://github.com/AmanSagar0607" target="_blank">GitHub</a> &middot;
     <a href="https://linkedin.com/in/amansagar0607" target="_blank">LinkedIn</a>
 </p>
@@ -509,6 +512,9 @@ This work is licensed under the MIT License.
                 </a>
                 <a href="https://x.com/AmanSagar0607a" target="_blank">
                     <img alt="X (Twitter)" src="https://img.shields.io/badge/𝕏-@AmanSagar0607a-black?style=flat-square&logo=x&logoColor=white">
+                </a>
+                <a href="https://discord.gg/YrSpR43UB" target="_blank">
+                    <img alt="Discord" src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white">
                 </a>
                 <a href="https://github.com/AmanSagar0607" target="_blank">
                     <img alt="GitHub" src="https://img.shields.io/badge/GitHub-AmanSagar0607-181717?style=flat-square&logo=github">
