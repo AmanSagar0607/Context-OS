@@ -1,9 +1,10 @@
 <h1 align="center">
-    <picture>
-        <img alt="Context OS" src="https://raw.githubusercontent.com/AmanSagar0607/Context-OS/main/public/context-os-banner.svg">
-    </picture>
-    <br>
-    <small>Context Infrastructure for AI Agents</small>
+    <a href="https://github.com/AmanSagar0607/Context-OS">
+        <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/AmanSagar0607/Context-OS/main/public/context-os-banner-dark.svg">
+            <img alt="Context OS - Context Infrastructure for AI Agents" src="https://raw.githubusercontent.com/AmanSagar0607/Context-OS/main/public/context-os-banner.svg" width="100%">
+        </picture>
+    </a>
 </h1>
 
 <p align="center">
