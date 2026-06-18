@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "amancrawl": {
+      "url": "http://localhost:8000/api/mcp",
+      "transport": "http",
+      "description": "AmanCrawl — Web Intelligence Platform. Provides tools for scraping, crawling, mapping, searching, and extracting structured data from the web.",
+      "tools": [
+        "amancrawl.scrape",
+        "amancrawl.crawl",
+        "amancrawl.map",
+        "amancrawl.search",
+        "amancrawl.extract"
+      ]
+    }
+  }
+}
