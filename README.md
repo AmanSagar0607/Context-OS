@@ -23,7 +23,7 @@
         <img alt="Package" src="https://img.shields.io/badge/package-context--core-blue"></a>
     <br/>
     <a href="https://discord.gg/YrSpR43UB" alt="Discord" target="_blank">
-        <img alt="Discord" src="https://img.shields.io/discord/YOUR_SERVER_ID?style=social&logo=discord&logoColor=white"></a>
+        <img alt="Discord" src="https://img.shields.io/discord/1517250412506513609?style=social&logo=discord&logoColor=white"></a>
     <a href="https://x.com/AmanSagar0607a" alt="X (formerly Twitter)" target="_blank">
         <img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/AmanSagar0607a?style=social&logo=x"></a>
     <a href="https://github.com/AmanSagar0607" alt="GitHub" target="_blank">
