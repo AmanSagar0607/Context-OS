@@ -11,6 +11,7 @@
     <a href="https://github.com/AmanSagar0607/Context-OS/stargazers" target="_blank"><img src="https://img.shields.io/github/stars/AmanSagar0607/Context-OS?style=social" alt="GitHub stars"></a>
     <a href="https://github.com/AmanSagar0607/Context-OS/network/members" target="_blank"><img src="https://img.shields.io/github/forks/AmanSagar0607/Context-OS?style=social" alt="GitHub forks"></a>
     <a href="https://github.com/AmanSagar0607/Context-OS/watchers" target="_blank"><img src="https://img.shields.io/github/watchers/AmanSagar0607/Context-OS?style=social" alt="GitHub watchers"></a>
+    <a href="https://github.com/AmanSagar0607/Context-OS/issues" target="_blank"><img src="https://img.shields.io/github/issues/AmanSagar0607/Context-OS?style=social" alt="GitHub issues"></a>
     <br/>
     <a href="https://github.com/AmanSagar0607/Context-OS/blob/main/LICENSE" alt="License">
         <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
@@ -18,10 +19,8 @@
         <img alt="Python 3.11+" src="https://img.shields.io/badge/Python-3.11+-green.svg"></a>
     <a href="https://github.com/AmanSagar0607/Context-OS/actions" alt="Tests">
         <img alt="Tests" src="https://github.com/AmanSagar0607/Context-OS/actions/workflows/tests.yml/badge.svg"></a>
-    <a href="https://pypi.org/project/context-ai/" alt="PyPI version">
-        <img alt="PyPI version" src="https://badge.fury.io/py/context-ai.svg"></a>
-    <a href="https://pepy.tech/project/context-ai" alt="Downloads">
-        <img alt="Downloads" src="https://img.shields.io/pypi/dm/context-ai"></a>
+    <a href="https://github.com/AmanSagar0607/Context-OS/pkgs/context-core" alt="Package">
+        <img alt="Package" src="https://img.shields.io/badge/package-context--core-blue"></a>
     <br/>
     <a href="https://x.com/AmanSagar0607a" alt="X (formerly Twitter)" target="_blank">
         <img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/AmanSagar0607a?style=social&logo=x"></a>
@@ -32,10 +31,6 @@
     <br/>
     <a href="https://github.com/AmanSagar0607/Context-OS" alt="PRs Welcome">
         <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
-    <a href="https://github.com/AmanSagar0607/Context-OS/pkgs/context-core" alt="Package">
-        <img alt="Package" src="https://img.shields.io/badge/package-context--core-blue"></a>
-    <a href="https://docs.contextos.dev" alt="Docs">
-        <img alt="Docs" src="https://img.shields.io/badge/docs-contextos.dev-blue"></a>
 </p>
 
 <p align="center">
