@@ -84,28 +84,29 @@ Today these capabilities are fragmented across multiple tools. You cobble togeth
 **Context OS unifies them into a single developer platform.**
 
 ```python
-from context_ai import ContextClient
+from context_ai import ContextAI, MemoryCreate, MemoryType, ImportanceLevel
 
-client = ContextClient(api_key="...")
+client = ContextAI(api_key="...")
 
 # Store a memory
-await client.memory.add(
+memory = client.memory.add(MemoryCreate(
     content="User prefers dark mode and concise responses",
-    tags=["preference", "ui"]
-)
+    memory_type=MemoryType.SEMANTIC,
+    importance=ImportanceLevel.HIGH,
+    tags=["preference", "ui"],
+))
 
 # Search memories
-results = await client.memory.search(query="What UI preferences does the user have?")
+results = client.memory.search(query="What UI preferences does the user have?")
 
 # Get context window
-context = await client.memory.context(query="What should I know about this user?")
+context = client.memory.context(query="What should I know about this user?")
 
 # Crawl and extract knowledge
-page = await client.crawl.scrape(url="https://example.com/article")
-knowledge = await client.knowledge.extract(content=page.content)
+page = client.crawl.scrape(url="https://example.com/article")
 
 # Web search
-results = await client.search.web(query="AI startups 2026")
+results = client.search.web(query="AI startups 2026")
 ```
 
 ---
@@ -139,7 +140,7 @@ results = await client.search.web(query="AI startups 2026")
 - **Memory-entity connections** for context
 
 ### MCP Native
-- **4 tool groups**: Memory, Search, Crawl, Knowledge
+- **20 tools** across 4 groups: Memory, Search, Crawl, Knowledge
 - **JSON-RPC 2.0** compliant
 - **HTTP/SSE transport** for remote servers
 - **stdio transport** for local development
@@ -179,32 +180,23 @@ pip install -e packages/context-core
 ### Quick Start
 
 ```python
-import asyncio
-from context_core.memory.service import MemoryService
-from context_core.memory.models import MemoryCreate, MemorySearchRequest
+from context_ai import ContextAI, MemoryCreate, MemoryType, ImportanceLevel
 
-async def main():
-    # Initialize (requires PostgreSQL + pgvector)
-    service = MemoryService(pool, embeddings)
-    
-    # Store a memory
-    memory = await service.add("user-123", MemoryCreate(
-        content="User prefers dark mode and concise responses",
-        memory_type="semantic",
-        importance="high",
-        tags=["preference", "ui"],
-    ))
-    
-    # Search memories
-    results = await service.search(MemorySearchRequest(
-        query="What UI preferences does the user have?",
-        user_id="user-123",
-    ))
-    
-    for result in results:
-        print(f"{result.score:.2f} - {result.memory.content}")
+client = ContextAI(api_key="your-api-key")
 
-asyncio.run(main())
+# Store a memory
+memory = client.memory.add(MemoryCreate(
+    content="User prefers dark mode and concise responses",
+    memory_type=MemoryType.SEMANTIC,
+    importance=ImportanceLevel.HIGH,
+    tags=["preference", "ui"],
+))
+
+# Search memories
+results = client.memory.search(query="What UI preferences does the user have?")
+
+for result in results:
+    print(f"{result.score:.2f} - {result.memory.content}")
 ```
 
 ---
@@ -280,6 +272,17 @@ asyncio.run(main())
 | `GET` | `/api/v1/knowledge/entities/:id` | Get entity |
 | `DELETE` | `/api/v1/knowledge/entities/:id` | Delete entity |
 | `POST` | `/api/v1/knowledge/relationships` | Create relationship |
+| `GET` | `/api/v1/knowledge/graph/:id` | Get entity graph |
+| `POST` | `/api/v1/knowledge/search` | Search entities |
+
+### MCP
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/mcp` | MCP JSON-RPC |
+| `POST` | `/api/mcp/sse` | MCP SSE transport |
+| `GET` | `/api/mcp/tools` | List MCP tools |
+| `GET` | `/api/mcp/health` | MCP health check |
 
 ---
 
@@ -334,14 +337,18 @@ Context-OS/
 
 | Component | Technology |
 |-----------|------------|
-| API Server | FastAPI (Python 3.11+) |
-| Database | PostgreSQL + pgvector |
+| API Server | FastAPI (Python 3.13) |
+| Database | PostgreSQL 16 + pgvector |
 | Embeddings | sentence-transformers (default), OpenAI, Cohere |
 | LLM | OpenRouter (GPT-4o-mini default) |
 | Payments | BaseUPI (zero-commission UPI) |
 | Frontend | Next.js 15, Tailwind CSS |
 | Auth | JWT + OAuth (Google, GitHub) |
 | MCP | JSON-RPC 2.0, HTTP/SSE |
+| Python SDK | httpx, pydantic |
+| TypeScript SDK | fetch, TypeScript 5.6 |
+| CLI | Click, Rich |
+| Docs | Docusaurus 3 |
 
 ---
 
@@ -393,12 +400,12 @@ pytest tests/ --cov=context_core
 - [x] Monorepo structure
 - [x] Unified memory system
 - [x] Database migrations
-- [ ] Hybrid retrieval pipeline
-- [ ] Python + TypeScript SDK
-- [ ] CLI tool
-- [ ] MCP server refactor
-- [ ] Documentation
-- [ ] Docker deployment
+- [x] Hybrid retrieval pipeline
+- [x] Python + TypeScript SDK
+- [x] CLI tool
+- [x] MCP server refactor (20 tools)
+- [x] Documentation
+- [x] Docker deployment
 
 ### 60 Days — Developer Adoption
 - LLM-based planner

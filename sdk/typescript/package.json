@@ -1,0 +1,59 @@
+{
+  "name": "context-ai",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Context OS — Memory, Search, Crawl, Knowledge",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "keywords": [
+    "context",
+    "ai",
+    "memory",
+    "search",
+    "crawl",
+    "knowledge-graph",
+    "mcp",
+    "agent",
+    "infrastructure"
+  ],
+  "author": "Aman Sagar <aman@amansagar.in>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AmanSagar0607/Context-OS"
+  },
+  "bugs": {
+    "url": "https://github.com/AmanSagar0607/Context-OS/issues"
+  },
+  "homepage": "https://github.com/AmanSagar0607/Context-OS#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {}
+}

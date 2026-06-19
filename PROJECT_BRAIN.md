@@ -676,13 +676,13 @@ Usage-based billing per API key.
 | 1. Architecture extraction | ✅ Completed | Tech Lead |
 | 2. Unified memory system | ✅ Completed | Tech Lead |
 | 3. Hybrid retrieval | ✅ Completed | Tech Lead |
-| 4. Python SDK | Not Started | Tech Lead |
-| 5. TypeScript SDK | Not Started | Tech Lead |
-| 6. CLI tool | Not Started | Tech Lead |
-| 7. MCP server refactor | Not Started | Tech Lead |
-| 8. Documentation | Not Started | Tech Lead |
-| 9. Docker deployment | Not Started | Tech Lead |
-| 10. Launch preparation | Not Started | Tech Lead |
+| 4. Python SDK | ✅ Completed | Tech Lead |
+| 5. TypeScript SDK | ✅ Completed | Tech Lead |
+| 6. CLI tool | ✅ Completed | Tech Lead |
+| 7. MCP server refactor | ✅ Completed | Tech Lead |
+| 8. Documentation | ✅ Completed | Tech Lead |
+| 9. Docker deployment | ✅ Completed | Tech Lead |
+| 10. Launch preparation | ✅ Completed | Tech Lead |
 
 ## Completed (2026-06-19)
 
@@ -715,12 +715,100 @@ Usage-based billing per API key.
 - [x] Created 17 retrieval tests (RRF, chunking)
 - [x] Total tests: 32 passing
 
+### Python SDK (2026-06-19)
+
+- [x] Created `sdk/python/context_ai/` — Python SDK package
+- [x] Created `sdk/python/context_ai/types.py` — Pydantic models (Memory, Search, Crawl, Knowledge types)
+- [x] Created `sdk/python/context_ai/_http.py` — HTTP client (sync + async)
+- [x] Created `sdk/python/context_ai/memory.py` — MemoryClient (12 methods)
+- [x] Created `sdk/python/context_ai/search.py` — SearchClient (4 methods)
+- [x] Created `sdk/python/context_ai/crawl.py` — CrawlClient (6 methods)
+- [x] Created `sdk/python/context_ai/knowledge.py` — KnowledgeClient (8 methods)
+- [x] Created `sdk/python/context_ai/client.py` — ContextAI main entry point
+- [x] Created `sdk/python/pyproject.toml` — Package config (hatchling, dependencies)
+- [x] Created `sdk/python/tests/test_client.py` — 13 tests passing
+- [x] Total SDK tests: 13 passing
+
+### TypeScript SDK (2026-06-19)
+
+- [x] Created `sdk/typescript/src/` — TypeScript SDK package
+- [x] Created `sdk/typescript/src/types.ts` — TypeScript types (enums, interfaces)
+- [x] Created `sdk/typescript/src/_http.ts` — HTTP client (fetch-based)
+- [x] Created `sdk/typescript/src/memory.ts` — MemoryClient (8 methods)
+- [x] Created `sdk/typescript/src/search.ts` — SearchClient (2 methods)
+- [x] Created `sdk/typescript/src/crawl.ts` — CrawlClient (4 methods)
+- [x] Created `sdk/typescript/src/knowledge.ts` — KnowledgeClient (6 methods)
+- [x] Created `sdk/typescript/src/index.ts` — ContextAI main entry point
+- [x] Created `sdk/typescript/package.json` — Package config
+- [x] Created `sdk/typescript/tsconfig.json` — TypeScript config
+- [x] Created `sdk/typescript/tsup.config.ts` — Build config (CJS + ESM)
+- [x] Created `sdk/typescript/tests/index.test.ts` — 8 tests passing
+- [x] Total TypeScript SDK tests: 8 passing
+
+### CLI Tool (2026-06-19)
+
+- [x] Created `cli/context_cli/` — CLI package
+- [x] Created `cli/context_cli/main.py` — Click CLI with 4 command groups (memory, search, crawl, knowledge)
+- [x] Created `cli/pyproject.toml` — Package config with `context` entry point
+- [x] Created `cli/tests/test_cli.py` — 9 tests passing
+- [x] Total CLI tests: 9 passing
+
+### MCP Server Refactor (2026-06-19)
+
+- [x] Refactored `apps/server/services/mcp_server.py` — 20 tools across 4 groups
+- [x] Created `apps/server/services/memory_service.py` — Memory service layer
+- [x] Created `apps/server/services/search_service.py` — Search service layer
+- [x] Created `apps/server/services/knowledge_service.py` — Knowledge service layer
+- [x] Created `apps/server/tests/test_mcp.py` — 19 tests passing
+- [x] Total MCP tests: 19 passing
+
+### Documentation Site (2026-06-19)
+
+- [x] Created `docs/` — Docusaurus documentation site
+- [x] Created `docs/docusaurus.config.js` — Site config with dark mode, navbar, footer
+- [x] Created `docs/sidebars.js` — Navigation sidebar
+- [x] Created `docs/src/css/custom.css` — Custom styling (#fa5a19 primary, dark mode)
+- [x] Created `docs/docs/index.md` — Introduction page
+- [x] Created `docs/docs/getting-started.md` — Quickstart guide
+- [x] Created `docs/docs/architecture.md` — System architecture
+- [x] Created `docs/docs/concepts/memory.md` — Memory concepts
+- [x] Created `docs/docs/concepts/retrieval.md` — Retrieval concepts
+- [x] Created `docs/docs/concepts/knowledge-graph.md` — Knowledge graph concepts
+- [x] Created `docs/docs/concepts/web-intelligence.md` — Web intelligence concepts
+- [x] Created `docs/docs/sdk/python.md` — Python SDK docs
+- [x] Created `docs/docs/sdk/typescript.md` — TypeScript SDK docs
+- [x] Created `docs/docs/cli.md` — CLI docs
+- [x] Created `docs/docs/mcp.md` — MCP server docs
+- [x] Created `docs/docs/api-reference.md` — API reference
+- [x] Created `docs/docs/deployment/docker.md` — Docker deployment
+- [x] Created `docs/docs/deployment/self-hosted.md` — Self-hosted guide
+- [x] Created `docs/docs/roadmap.md` — Roadmap
+- [x] Created `docs/docs/changelog.md` — Changelog
+
+### Docker Deployment (2026-06-19)
+
+- [x] Created `Dockerfile` — Multi-stage build (builder + runtime)
+- [x] Created `docker-compose.yml` — PostgreSQL + Redis + Server
+
+### Launch Preparation (2026-06-19)
+
+- [x] Updated README.md — Code examples match actual SDK API
+- [x] Updated README.md — MCP tools count (20 tools)
+- [x] Updated README.md — Knowledge API endpoints (graph, search)
+- [x] Updated README.md — Tech Stack (Python SDK, TypeScript SDK, CLI, Docs)
+- [x] Updated README.md — Roadmap (all 30-day items completed)
+
 ## Next Tasks
 
-1. Create Python SDK package (`sdk/python/context_ai/`)
-2. Create TypeScript SDK package (`sdk/typescript/src/`)
-3. Create CLI tool (`cli/context_cli/`)
-4. Refactor MCP server with 4 tool groups
+1. ~~Create Python SDK package~~ ✅ Complete
+2. ~~Create TypeScript SDK package~~ ✅ Complete
+3. ~~Create CLI tool~~ ✅ Complete
+4. ~~Refactor MCP server with 4 tool groups~~ ✅ Complete
+5. ~~Create documentation site (Docusaurus)~~ ✅ Complete
+6. ~~Docker deployment (Dockerfile + docker-compose.yml)~~ ✅ Complete
+7. ~~Launch preparation (final testing and polish)~~ ✅ Complete
+
+**All tasks complete!**
 
 ## Blockers
 
