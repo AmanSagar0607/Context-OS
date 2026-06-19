@@ -166,7 +166,7 @@ results = client.search.web(query="AI startups 2026")
 ### Installation
 
 ```bash
-pip install context-ai
+pip install contextos-sdk
 ```
 
 Or from source:
