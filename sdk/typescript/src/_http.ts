@@ -56,7 +56,7 @@ export class HTTPClient {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   async get<T>(path: string, params?: Record<string, string | number | boolean>): Promise<T> {

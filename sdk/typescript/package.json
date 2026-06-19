@@ -1,5 +1,5 @@
 {
-  "name": "context-ai",
+  "name": "contextos-typescript",
   "version": "0.1.0",
   "description": "TypeScript SDK for Context OS — Memory, Search, Crawl, Knowledge",
   "main": "dist/index.js",
