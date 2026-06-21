@@ -341,7 +341,7 @@ Context-OS/
 | Database | PostgreSQL 16 + pgvector |
 | Embeddings | sentence-transformers (default), OpenAI, Cohere |
 | LLM | OpenRouter (GPT-4o-mini default) |
-| Payments | BaseUPI (zero-commission UPI) |
+| Payments | Polar (developer-first billing) |
 | Frontend | Next.js 15, Tailwind CSS |
 | Auth | JWT + OAuth (Google, GitHub) |
 | MCP | JSON-RPC 2.0, HTTP/SSE |

@@ -82,9 +82,9 @@ class Settings:
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
 
-    # BaseUPI — Zero-commission UPI payments
-    baseupi_secret_key: str = ""
-    baseupi_webhook_secret: str = ""
+    # Polar — Subscription billing
+    polar_access_token: str = ""
+    polar_webhook_secret: str = ""
 
     # OAuth — Google and GitHub
     google_client_id: str = ""

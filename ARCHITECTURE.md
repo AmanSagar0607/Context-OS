@@ -94,7 +94,7 @@ context-platform/
 │   │   │   └── rate_limit.py     # Rate limiting by API key
 │   │   ├── services/
 │   │   │   ├── subscription.py   # Subscription management
-│   │   │   ├── payment.py        # BaseUPI integration
+│   │   │   ├── payment.py        # Polar integration
 │   │   │   ├── oauth.py          # Google/GitHub OAuth
 │   │   │   └── auth.py           # Email/password auth
 │   │   ├── Dockerfile

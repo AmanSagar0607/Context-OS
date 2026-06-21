@@ -1,68 +1,112 @@
----
-sidebar_position: 14
-title: Self-Hosted
----
+# Self-Hosting Guide
 
-# Self-Hosted
-
-Install and run Context OS on your own infrastructure.
+> Deploy ContextOS on your own infrastructure.
 
 ## Prerequisites
 
-- Python 3.10+
-- PostgreSQL 16+ with pgvector
-- Redis (optional, for caching)
+- Docker and Docker Compose
+- 4GB RAM minimum
+- Port 5432 (PostgreSQL) and 8000 (API) available
 
-## Installation
+## Quick Start
 
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/AmanSagar0607/Context-OS.git
 cd Context-OS
 
-# Install dependencies
-pip install -e "packages/context-core[dev]"
-pip install -e "apps/server[dev]"
+# Start with Docker Compose
+docker-compose up -d
+
+# Verify
+curl http://localhost:8000/api/v1/health
 ```
 
-## Database Setup
+## Docker Compose Services
 
-### 1. Create Database
+| Service | Port | Description |
+|---------|------|-------------|
+| postgres | 5432 | PostgreSQL + pgvector |
+| server | 8000 | ContextOS API |
 
-```sql
-CREATE DATABASE app-agent;
-```
+## Environment Variables
 
-### 2. Enable pgvector
-
-```sql
-CREATE EXTENSION vector;
-```
-
-### 3. Run Migrations
+Create a `.env` file:
 
 ```bash
-psql -d app-agent -f packages/context-db/migrations/001_core.sql
-psql -d app-agent -f packages/context-db/migrations/002_memory.sql
-psql -d app-agent -f packages/context-db/migrations/003_knowledge.sql
-psql -d app-agent -f packages/context-db/migrations/004_subscriptions.sql
+# Database
+POSTGRES_DB=app-agent
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password
+
+# LLM
+OPENROUTER_API_KEY=your_key
+
+# Auth
+AMAN_JWT_SECRET=your_secret
+
+# Frontend
+FRONTEND_URL=http://localhost:3000
 ```
 
-## Start Server
+## Configuration
+
+### Database
+
+ContextOS uses PostgreSQL with pgvector extension. The Docker Compose file includes this automatically.
+
+### LLM
+
+ContextOS uses OpenRouter for LLM calls. Get an API key at [openrouter.ai](https://openrouter.ai).
+
+### Authentication
+
+Set `AMAN_JWT_SECRET` to a random string for JWT signing.
+
+## Production Deployment
+
+### Railway
+
+1. Connect your GitHub repo
+2. Add PostgreSQL service
+3. Set environment variables
+4. Deploy
+
+### Fly.io
+
+1. Install flyctl
+2. `fly launch`
+3. `fly deploy`
+
+### Docker
 
 ```bash
-cd apps/server
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+docker build -t contextos .
+docker run -p 8000:8000 contextos
 ```
 
-## Verify
+## Monitoring
+
+### Health Check
 
 ```bash
 curl http://localhost:8000/api/v1/health
 ```
 
-## Next Steps
+### Logs
 
-- [API Reference](/docs/api-reference)
-- [MCP Server](/docs/mcp)
-- [Python SDK](/docs/sdk/python)
+```bash
+docker-compose logs -f server
+```
+
+## Backup
+
+```bash
+docker-compose exec postgres pg_dump -U postgres app-agent > backup.sql
+```
+
+## Restore
+
+```bash
+cat backup.sql | docker-compose exec -T postgres psql -U postgres app-agent
+```

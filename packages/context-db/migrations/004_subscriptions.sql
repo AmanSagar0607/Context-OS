@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     plan_id UUID NOT NULL REFERENCES plans(id),
     status TEXT NOT NULL DEFAULT 'active'
         CHECK (status IN ('active', 'past_due', 'canceled', 'trialing')),
-    billing_provider TEXT DEFAULT 'baseupi',
+    billing_provider TEXT DEFAULT 'polar',
     billing_customer_id TEXT,
     billing_subscription_id TEXT,
     current_period_start TIMESTAMPTZ,

@@ -241,15 +241,15 @@ export default function AdminPage() {
               </div>
             </SettingsCard>
 
-            <SettingsCard title="Payment Provider" description="BaseUPI integration for zero-commission UPI payments">
+            <SettingsCard title="Payment Provider" description="Polar integration for subscription billing">
               <div className="p-3 bg-[#faf7f2] dark:bg-[#13151a] rounded-lg border border-[#e5e7eb] dark:border-white/[0.07]">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-[#3ddc84]/10 flex items-center justify-center">
                     <Crown className="w-4 h-4 text-[#3ddc84]" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium">BaseUPI</div>
-                    <div className="text-[11px] text-[#999]">Zero-commission UPI payments · Instant settlement</div>
+                    <div className="text-sm font-medium">Polar</div>
+                    <div className="text-[11px] text-[#999]">Developer-first billing · Usage-based support</div>
                   </div>
                 </div>
               </div>

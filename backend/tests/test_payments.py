@@ -10,14 +10,14 @@ def test_payment_status(client, auth_headers):
     assert "plan" in data
 
 
-def test_payment_checkout_requires_baseupi_key(client, auth_headers):
-    """Checkout returns 502 when BaseUPI key is not configured (expected in test env)."""
+def test_payment_checkout_requires_polar_key(client, auth_headers):
+    """Checkout returns 502 when Polar token is not configured (expected in test env)."""
     response = client.post(
         "/api/payments/checkout",
-        json={"plan": "pro", "amount_paise": 49900},
+        json={"plan": "pro", "price_id": "test_price_123"},
         headers=auth_headers,
     )
-    # Without BASEUPI_SECRET_KEY configured, this should return 502
+    # Without POLAR_ACCESS_TOKEN configured, this should return 502
     assert response.status_code in [200, 502]
 
 

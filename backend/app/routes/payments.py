@@ -1,6 +1,6 @@
 # app/routes/payments.py
 """
-Payment routes — BaseUPI checkout, webhooks, and subscription management.
+Payment routes — Polar checkout, webhooks, and subscription management.
 """
 
 from __future__ import annotations
@@ -16,8 +16,7 @@ from pydantic import BaseModel
 from app.config import get_settings
 from app.auth_middleware import AuthContext, require_auth
 from services.payment_service import (
-    create_checkout_order,
-    create_subscription_order,
+    create_checkout_session,
     verify_webhook_signature,
     handle_webhook_event,
     get_subscription_status,
@@ -31,37 +30,38 @@ router = APIRouter(prefix="/api/payments", tags=["payments"])
 
 class CheckoutRequest(BaseModel):
     plan: str = "pro"
-    amount_paise: int = 49900  # ₹499 default
+    price_id: str = ""
 
 
 class CheckoutResponse(BaseModel):
-    order_id: str
     checkout_url: str
-    upi_deeplink: str | None = None
-    amount_paise: int
+    checkout_id: str
     plan: str
 
 
 @router.post("/checkout")
 async def create_checkout(body: CheckoutRequest, auth: AuthContext = Depends(require_auth)):
-    """Create a BaseUPI checkout order for subscription."""
-    merchant_order_id = f"sub_{auth.user_id[:8]}_{uuid.uuid4().hex[:8]}"
+    """Create a Polar checkout session for subscription."""
+    settings = get_settings()
 
-    order = await create_checkout_order(
-        amount_paise=body.amount_paise,
-        merchant_order_id=merchant_order_id,
+    success_url = f"{settings.frontend_url}/dashboard?checkout=success"
+    cancel_url = f"{settings.frontend_url}/dashboard?checkout=cancelled"
+
+    session = await create_checkout_session(
+        product_id=body.price_id,
+        user_email=auth.user_id,
+        user_id=auth.user_id,
+        success_url=success_url,
+        cancel_url=cancel_url,
     )
 
-    if not order:
-        raise HTTPException(status_code=502, detail="Failed to create BaseUPI order")
+    if not session:
+        raise HTTPException(status_code=502, detail="Failed to create Polar checkout session")
 
     return {
-        "order_id": order.get("public_order_id"),
-        "checkout_url": order.get("checkout_url"),
-        "upi_deeplink": order.get("upi_deeplink"),
-        "amount_paise": body.amount_paise,
+        "checkout_url": session.get("checkout_url"),
+        "checkout_id": session.get("id"),
         "plan": body.plan,
-        "merchant_order_id": merchant_order_id,
     }
 
 
@@ -85,14 +85,14 @@ async def payment_history(auth: AuthContext = Depends(require_auth)):
 
 
 @router.post("/webhook")
-async def baseupi_webhook(request: Request):
-    """Handle BaseUPI webhook events (payment success, failure, refund)."""
+async def polar_webhook(request: Request):
+    """Handle Polar webhook events (subscription created/updated/canceled)."""
     body = await request.body()
-    signature = request.headers.get("x-baseupi-signature", "")
+    signature = request.headers.get("polar-signature", "")
 
     from app.config import get_settings
     settings = get_settings()
-    webhook_secret = getattr(settings, "baseupi_webhook_secret", "") or ""
+    webhook_secret = getattr(settings, "polar_webhook_secret", "") or ""
 
     if webhook_secret and not verify_webhook_signature(body, signature, webhook_secret):
         logger.warning("Invalid webhook signature")
