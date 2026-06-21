@@ -81,8 +81,8 @@ class Settings:
     aman_api_key_header: str = "X-Aman-API-Key"
 
     # --- Payments (Polar) ---
-    polar_access_token: str = ""
-    polar_webhook_secret: str = ""
+    polar_client_id: str = ""
+    polar_client_secret: str = ""
 
     # --- OAuth ---
     google_client_id: str = ""
@@ -164,8 +164,8 @@ def get_settings() -> Settings:
         aman_jwt_secret=os.getenv("AMAN_JWT_SECRET", ""),
         aman_session_duration_days=int(os.getenv("AMAN_SESSION_DURATION_DAYS", "7")),
         aman_api_key_header=os.getenv("AMAN_API_KEY_HEADER", "X-Aman-API-Key"),
-        polar_access_token=os.getenv("POLAR_ACCESS_TOKEN", ""),
-        polar_webhook_secret=os.getenv("POLAR_WEBHOOK_SECRET", ""),
+        polar_client_id=os.getenv("POLAR_CLIENT_ID", ""),
+        polar_client_secret=os.getenv("POLAR_CLIENT_SECRET", ""),
         google_client_id=os.getenv("GOOGLE_CLIENT_ID", ""),
         google_client_secret=os.getenv("GOOGLE_CLIENT_SECRET", ""),
         github_client_id=os.getenv("GITHUB_CLIENT_ID", ""),

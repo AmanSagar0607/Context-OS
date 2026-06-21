@@ -92,7 +92,7 @@ async def polar_webhook(request: Request):
 
     from app.config import get_settings
     settings = get_settings()
-    webhook_secret = getattr(settings, "polar_webhook_secret", "") or ""
+    webhook_secret = getattr(settings, "polar_client_secret", "") or ""
 
     if webhook_secret and not verify_webhook_signature(body, signature, webhook_secret):
         logger.warning("Invalid webhook signature")

@@ -83,8 +83,8 @@ class Settings:
     stripe_webhook_secret: str = ""
 
     # Polar — Subscription billing
-    polar_access_token: str = ""
-    polar_webhook_secret: str = ""
+    polar_client_id: str = ""
+    polar_client_secret: str = ""
 
     # OAuth — Google and GitHub
     google_client_id: str = ""

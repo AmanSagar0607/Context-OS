@@ -32,9 +32,9 @@ async def _polar_request(
 ) -> dict | None:
     """Make an authenticated request to Polar API."""
     settings = get_settings()
-    api_key = getattr(settings, "polar_access_token", "") or ""
+    api_key = getattr(settings, "polar_client_secret", "") or ""
     if not api_key:
-        logger.warning("Polar access token not configured")
+        logger.warning("Polar client secret not configured")
         return None
 
     headers = {
