@@ -1,4 +1,4 @@
-module github.com/contextos/sdk-go
+module github.com/AmanSagar0607/Context-OS/sdk/go
 
 go 1.21
 

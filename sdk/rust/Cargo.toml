@@ -2,10 +2,15 @@
 name = "contextos"
 version = "0.1.0"
 edition = "2021"
-description = "ContextOS SDK for Rust"
+description = "ContextOS SDK for Rust — Memory, Search, Crawl, Knowledge for AI Agents"
 authors = ["Aman Sagar <aman@amansagar.in>"]
 license = "MIT"
 repository = "https://github.com/AmanSagar0607/Context-OS"
+homepage = "https://github.com/AmanSagar0607/Context-OS"
+documentation = "https://docs.rs/contextos"
+readme = "README.md"
+keywords = ["ai", "memory", "search", "knowledge-graph", "mcp"]
+categories = ["memory"]
 
 [dependencies]
 reqwest = { version = "0.12", features = ["json"] }

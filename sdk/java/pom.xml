@@ -10,7 +10,29 @@
     <packaging>jar</packaging>
 
     <name>ContextOS SDK</name>
-    <description>ContextOS SDK for Java</description>
+    <description>ContextOS SDK for Java — Memory, Search, Crawl, Knowledge for AI Agents</description>
+    <url>https://github.com/AmanSagar0607/Context-OS</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Aman Sagar</name>
+            <email>aman@amansagar.in</email>
+            <url>https://amansagar.in</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/AmanSagar0607/Context-OS.git</connection>
+        <developerConnection>scm:git:ssh://github.com/AmanSagar0607/Context-OS.git</developerConnection>
+        <url>https://github.com/AmanSagar0607/Context-OS/tree/main/sdk/java</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
