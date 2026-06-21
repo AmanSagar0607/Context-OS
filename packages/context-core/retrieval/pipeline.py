@@ -7,7 +7,7 @@ Combines vector search, BM25 search, and RRF fusion into a single pipeline.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Callable, Awaitable
 
 import asyncpg
 
@@ -16,6 +16,7 @@ from .vector_search import VectorSearch
 from .bm25_search import BM25Search
 from .fusion import reciprocal_rank_fusion, weighted_reciprocal_rank_fusion, FusedResult
 from .chunking import RecursiveChunker, Chunk
+from .reflection import ReflectionConfig, reflection_search, ReflectionResult
 
 
 @dataclass
@@ -210,3 +211,54 @@ class RetrievalPipeline:
             List of Chunk objects
         """
         return self.chunker.chunk(text, metadata)
+
+    async def search_with_reflection(
+        self,
+        query: str,
+        generate_answer_fn: Callable[[str, str], Awaitable[str]],
+        user_id: Optional[str] = None,
+        api_key: Optional[str] = None,
+        model: Optional[str] = None,
+        reflection_config: Optional[ReflectionConfig] = None,
+    ) -> tuple[str, ReflectionResult]:
+        """
+        Execute search with reflection loop for self-correction.
+
+        Args:
+            query: User query
+            generate_answer_fn: Async function(query, context) -> answer
+            user_id: Optional user ID filter
+            api_key: LLM API key for reflection
+            model: LLM model for reflection
+            reflection_config: Reflection configuration
+
+        Returns:
+            Tuple of (answer, reflection_result)
+        """
+        if not api_key or not model:
+            # Fallback to regular search without reflection
+            context_result = await self.search_with_context(query, user_id)
+            context_str = "\n".join(
+                f"[{i+1}] {r.content}" for i, r in enumerate(context_result["memories"])
+            )
+            answer = await generate_answer_fn(query, context_str)
+            return answer, ReflectionResult(
+                verdict="high_confidence",
+                confidence=1.0,
+                reasoning="No API key for reflection, proceeding without",
+            )
+
+        async def search_fn(q: str) -> str:
+            context_result = await self.search_with_context(q, user_id)
+            return "\n".join(
+                f"[{i+1}] {r.content}" for i, r in enumerate(context_result["memories"])
+            )
+
+        return await reflection_search(
+            query=query,
+            search_fn=search_fn,
+            generate_answer_fn=generate_answer_fn,
+            api_key=api_key,
+            model=model,
+            config=reflection_config,
+        )
