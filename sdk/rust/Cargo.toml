@@ -1,0 +1,19 @@
+[package]
+name = "contextos"
+version = "0.1.0"
+edition = "2021"
+description = "ContextOS SDK for Rust"
+authors = ["Aman Sagar <aman@amansagar.in>"]
+license = "MIT"
+repository = "https://github.com/AmanSagar0607/Context-OS"
+
+[dependencies]
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+thiserror = "1.0"
+url = "2.5"
+
+[dev-dependencies]
+tokio-test = "0.4"
