@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "context-cli"
+name = "ctxos-cli"
 version = "0.1.0"
 description = "CLI for Context OS — Memory, Search, Crawl, Knowledge"
 readme = "README.md"
@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [project.scripts]
-context = "context_cli.main:cli"
+contextos = "context_cli.main:cli"
 
 [project.optional-dependencies]
 dev = [
