@@ -31,9 +31,18 @@ from agents.citation_agent import citation_executor
 from agents.security_agent import security_executor
 from agents.workflow_agent import workflow_executor
 
-# CrewAI (legacy)
-from agents.crawl_agents import WebIntelligenceCrew
-from agents.tools import JinaReaderTool, Crawl4AITool, LLMScraperTool, ScrapeGraphAITool
+# CrewAI (legacy) - optional import
+try:
+    from agents.crawl_agents import WebIntelligenceCrew
+    from agents.tools import JinaReaderTool, Crawl4AITool, LLMScraperTool, ScrapeGraphAITool
+    _crewai_available = True
+except ImportError:
+    _crewai_available = False
+    WebIntelligenceCrew = None
+    JinaReaderTool = None
+    Crawl4AITool = None
+    LLMScraperTool = None
+    ScrapeGraphAITool = None
 
 __all__ = [
     # Core
