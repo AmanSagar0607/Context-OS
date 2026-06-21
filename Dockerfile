@@ -18,7 +18,7 @@ COPY pyproject.toml /app/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -e "apps/server[dev]"
+RUN pip install --no-cache-dir -e "apps/server[full]"
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────
 FROM python:3.13-slim AS runtime

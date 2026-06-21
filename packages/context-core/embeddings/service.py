@@ -1,8 +1,12 @@
 """
 Embedding Service — Pluggable embedding providers.
 
-Supports sentence-transformers (default), OpenAI, Cohere,
-and a lightweight numpy-only fallback (random projection).
+Provider priority (auto-detection):
+  1. fastembed (ONNX, ~50MB, no torch) — preferred local
+  2. sentence-transformers (torch, ~2GB+) — full-featured local
+  3. openai — cloud API
+  4. random-projection (numpy only) — always-available fallback
+
 All providers expose the same interface: embed_query() and embed_texts().
 """
 
@@ -10,7 +14,6 @@ from __future__ import annotations
 
 import hashlib
 import time
-from abc import ABC, abstractmethod
 from typing import Protocol
 
 import numpy as np
@@ -23,6 +26,159 @@ class EmbeddingProvider(Protocol):
     def embed_texts(self, texts: list[str]) -> dict: ...
 
 
+# ---------------------------------------------------------------------------
+# 1. FastEmbed (ONNX Runtime) — lightweight, fast, no torch
+# ---------------------------------------------------------------------------
+
+class FastEmbedProvider:
+    """Embeddings via fastembed (ONNX Runtime). ~50MB, no torch needed."""
+
+    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5", dimension: int = 384):
+        self.model_name = model_name
+        self.dimension = dimension
+        self._model = None
+
+    def _load_model(self):
+        if self._model is None:
+            from fastembed import TextEmbedding
+            self._model = TextEmbedding(model_name=self.model_name)
+        return self._model
+
+    def embed_query(self, text: str) -> list[float]:
+        model = self._load_model()
+        embeddings = list(model.embed([text]))
+        return embeddings[0].tolist()
+
+    def embed_texts(self, texts: list[str]) -> dict:
+        start = time.perf_counter()
+        if not texts:
+            return {
+                "model": self.model_name,
+                "dimension": self.dimension,
+                "count": 0,
+                "vectors": [],
+                "duration_ms": 0,
+            }
+
+        model = self._load_model()
+        embeddings = list(model.embed(texts))
+        vectors = [e.tolist() for e in embeddings]
+        dim = len(vectors[0]) if vectors else self.dimension
+
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        return {
+            "model": self.model_name,
+            "dimension": dim,
+            "count": len(texts),
+            "vectors": vectors,
+            "duration_ms": round(elapsed_ms, 2),
+        }
+
+
+# ---------------------------------------------------------------------------
+# 2. Sentence Transformers (PyTorch) — full-featured local
+# ---------------------------------------------------------------------------
+
+class SentenceTransformerProvider:
+    """Local embeddings via sentence-transformers (requires torch)."""
+
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        self.model_name = model_name
+        self._model = None
+
+    def _load_model(self):
+        if self._model is None:
+            from sentence_transformers import SentenceTransformer
+            self._model = SentenceTransformer(self.model_name)
+        return self._model
+
+    def embed_query(self, text: str) -> list[float]:
+        model = self._load_model()
+        vector = model.encode([text], show_progress_bar=False, convert_to_numpy=True)[0]
+        return vector.tolist()
+
+    def embed_texts(self, texts: list[str]) -> dict:
+        start = time.perf_counter()
+        if not texts:
+            return {
+                "model": self.model_name,
+                "dimension": 0,
+                "count": 0,
+                "vectors": [],
+                "duration_ms": 0,
+            }
+
+        model = self._load_model()
+        vectors = model.encode(texts, show_progress_bar=False, convert_to_numpy=True)
+        dim = int(vectors.shape[1])
+
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        return {
+            "model": self.model_name,
+            "dimension": dim,
+            "count": len(texts),
+            "vectors": vectors.tolist(),
+            "duration_ms": round(elapsed_ms, 2),
+        }
+
+
+# ---------------------------------------------------------------------------
+# 3. OpenAI API — cloud
+# ---------------------------------------------------------------------------
+
+class OpenAIProvider:
+    """OpenAI embeddings via API."""
+
+    def __init__(self, model_name: str = "text-embedding-3-small", api_key: str = ""):
+        self.model_name = model_name
+        self.api_key = api_key
+
+    def embed_query(self, text: str) -> list[float]:
+        import httpx
+        response = httpx.post(
+            "https://api.openai.com/v1/embeddings",
+            headers={"Authorization": f"Bearer {self.api_key}"},
+            json={"model": self.model_name, "input": text},
+        )
+        response.raise_for_status()
+        return response.json()["data"][0]["embedding"]
+
+    def embed_texts(self, texts: list[str]) -> dict:
+        import httpx
+        start = time.perf_counter()
+        if not texts:
+            return {
+                "model": self.model_name,
+                "dimension": 0,
+                "count": 0,
+                "vectors": [],
+                "duration_ms": 0,
+            }
+
+        response = httpx.post(
+            "https://api.openai.com/v1/embeddings",
+            headers={"Authorization": f"Bearer {self.api_key}"},
+            json={"model": self.model_name, "input": texts},
+        )
+        response.raise_for_status()
+        data = response.json()["data"]
+        vectors = [item["embedding"] for item in data]
+        dim = len(vectors[0]) if vectors else 0
+
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        return {
+            "model": self.model_name,
+            "dimension": dim,
+            "count": len(texts),
+            "vectors": vectors,
+            "duration_ms": round(elapsed_ms, 2),
+        }
+
+
+# ---------------------------------------------------------------------------
+# 4. Random Projection — numpy-only, always available
+# ---------------------------------------------------------------------------
+
 class RandomProjectionProvider:
     """Lightweight numpy-only embeddings using random projection.
 
@@ -31,7 +187,6 @@ class RandomProjectionProvider:
     """
 
     VOCAB_SIZE = 4096
-    HASH_MOD = 2**31
 
     def __init__(self, dimension: int = 384, seed: int = 42):
         self.dimension = dimension
@@ -89,103 +244,31 @@ class RandomProjectionProvider:
         }
 
 
-class SentenceTransformerProvider:
-    """Local embeddings via sentence-transformers."""
-
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self.model_name = model_name
-        self._model = None
-
-    def _load_model(self):
-        if self._model is None:
-            from sentence_transformers import SentenceTransformer
-            self._model = SentenceTransformer(self.model_name)
-        return self._model
-
-    def embed_query(self, text: str) -> list[float]:
-        model = self._load_model()
-        vector = model.encode([text], show_progress_bar=False, convert_to_numpy=True)[0]
-        return vector.tolist()
-
-    def embed_texts(self, texts: list[str]) -> dict:
-        start = time.perf_counter()
-        if not texts:
-            return {
-                "model": self.model_name,
-                "dimension": 0,
-                "count": 0,
-                "vectors": [],
-                "duration_ms": 0,
-            }
-
-        model = self._load_model()
-        vectors = model.encode(texts, show_progress_bar=False, convert_to_numpy=True)
-        dim = int(vectors.shape[1])
-
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        return {
-            "model": self.model_name,
-            "dimension": dim,
-            "count": len(texts),
-            "vectors": vectors.tolist(),
-            "duration_ms": round(elapsed_ms, 2),
-        }
-
-
-class OpenAIProvider:
-    """OpenAI embeddings via API."""
-
-    def __init__(self, model_name: str = "text-embedding-3-small", api_key: str = ""):
-        self.model_name = model_name
-        self.api_key = api_key
-
-    def embed_query(self, text: str) -> list[float]:
-        import httpx
-        response = httpx.post(
-            "https://api.openai.com/v1/embeddings",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json={"model": self.model_name, "input": text},
-        )
-        response.raise_for_status()
-        return response.json()["data"][0]["embedding"]
-
-    def embed_texts(self, texts: list[str]) -> dict:
-        import httpx
-        start = time.perf_counter()
-        if not texts:
-            return {
-                "model": self.model_name,
-                "dimension": 0,
-                "count": 0,
-                "vectors": [],
-                "duration_ms": 0,
-            }
-
-        response = httpx.post(
-            "https://api.openai.com/v1/embeddings",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json={"model": self.model_name, "input": texts},
-        )
-        response.raise_for_status()
-        data = response.json()["data"]
-        vectors = [item["embedding"] for item in data]
-        dim = len(vectors[0]) if vectors else 0
-
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        return {
-            "model": self.model_name,
-            "dimension": dim,
-            "count": len(texts),
-            "vectors": vectors,
-            "duration_ms": round(elapsed_ms, 2),
-        }
-
+# ---------------------------------------------------------------------------
+# Auto-detection: pick the best available provider
+# ---------------------------------------------------------------------------
 
 def _create_provider(provider: str, model_name: str, api_key: str, dimension: int):
-    """Create the best available provider for the given config."""
+    """Create the best available provider for the given config.
+
+    Fallback chain:
+      1. Explicit provider request (openai, sentence-transformers, fastembed)
+      2. Auto-detect: fastembed → sentence-transformers → openai → random-projection
+    """
+    # Explicit openai
     if provider == "openai" and api_key:
         return OpenAIProvider(model_name=model_name, api_key=api_key)
 
+    # Explicit fastembed
+    if provider == "fastembed":
+        try:
+            import fastembed  # noqa: F401
+            model = model_name if "/" in model_name else "BAAI/bge-small-en-v1.5"
+            return FastEmbedProvider(model_name=model, dimension=dimension)
+        except ImportError:
+            pass
+
+    # Explicit sentence-transformers
     if provider == "sentence-transformers":
         try:
             import sentence_transformers  # noqa: F401
@@ -193,6 +276,25 @@ def _create_provider(provider: str, model_name: str, api_key: str, dimension: in
         except ImportError:
             pass
 
+    # Auto-detect: try fastembed first (lightest)
+    try:
+        import fastembed  # noqa: F401
+        return FastEmbedProvider(model_name="BAAI/bge-small-en-v1.5", dimension=dimension)
+    except ImportError:
+        pass
+
+    # Then sentence-transformers
+    try:
+        import sentence_transformers  # noqa: F401
+        return SentenceTransformerProvider(model_name=model_name)
+    except ImportError:
+        pass
+
+    # Then OpenAI if key is available
+    if api_key:
+        return OpenAIProvider(model_name="text-embedding-3-small", api_key=api_key)
+
+    # Last resort: random projection
     return RandomProjectionProvider(dimension=dimension)
 
 
@@ -201,7 +303,7 @@ class EmbeddingService:
 
     def __init__(
         self,
-        provider: str = "sentence-transformers",
+        provider: str = "auto",
         model_name: str = "all-MiniLM-L6-v2",
         api_key: str = "",
         dimension: int = 384,
@@ -212,12 +314,15 @@ class EmbeddingService:
 
     @property
     def actual_provider(self) -> str:
-        if isinstance(self._provider, RandomProjectionProvider):
-            return "random-projection"
+        """Return the actual provider being used (after auto-detection)."""
+        if isinstance(self._provider, FastEmbedProvider):
+            return "fastembed"
         elif isinstance(self._provider, SentenceTransformerProvider):
             return "sentence-transformers"
         elif isinstance(self._provider, OpenAIProvider):
             return "openai"
+        elif isinstance(self._provider, RandomProjectionProvider):
+            return "random-projection"
         return "unknown"
 
     def embed_query(self, text: str) -> list[float]:

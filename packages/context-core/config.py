@@ -57,7 +57,7 @@ class Settings:
     # --- Embeddings ---
     embedding_model: str = "all-MiniLM-L6-v2"
     embedding_dimension: int = 384
-    embedding_provider: str = "sentence-transformers"  # sentence-transformers | openai | cohere
+    embedding_provider: str = "auto"  # auto | fastembed | sentence-transformers | openai
 
     # --- Retrieval ---
     chunk_size: int = 500
