@@ -1,15 +1,16 @@
 """
 Embedding Service — Pluggable embedding providers.
 
-Supports sentence-transformers (default), OpenAI, and Cohere.
+Supports sentence-transformers (default), OpenAI, Cohere,
+and a lightweight numpy-only fallback (random projection).
 All providers expose the same interface: embed_query() and embed_texts().
 """
 
 from __future__ import annotations
 
+import hashlib
 import time
 from abc import ABC, abstractmethod
-from functools import lru_cache
 from typing import Protocol
 
 import numpy as np
@@ -20,6 +21,72 @@ class EmbeddingProvider(Protocol):
 
     def embed_query(self, text: str) -> list[float]: ...
     def embed_texts(self, texts: list[str]) -> dict: ...
+
+
+class RandomProjectionProvider:
+    """Lightweight numpy-only embeddings using random projection.
+
+    Produces deterministic, consistent vectors for cosine similarity.
+    No ML models required — ideal for Docker/server deployments.
+    """
+
+    VOCAB_SIZE = 4096
+    HASH_MOD = 2**31
+
+    def __init__(self, dimension: int = 384, seed: int = 42):
+        self.dimension = dimension
+        rng = np.random.RandomState(seed)
+        self._projection = rng.randn(self.VOCAB_SIZE, dimension).astype(np.float32)
+        norms = np.linalg.norm(self._projection, axis=1, keepdims=True)
+        self._projection /= np.where(norms > 0, norms, 1.0)
+
+    def _hash_token(self, token: str) -> int:
+        h = int(hashlib.md5(token.encode()).hexdigest(), 16)
+        return h % self.VOCAB_SIZE
+
+    def _text_to_vector(self, text: str) -> np.ndarray:
+        tokens = text.lower().split()
+        if not tokens:
+            return np.zeros(self.dimension, dtype=np.float32)
+
+        vec = np.zeros(self.VOCAB_SIZE, dtype=np.float32)
+        for token in tokens:
+            idx = self._hash_token(token)
+            vec[idx] += 1.0
+
+        total = vec.sum()
+        if total > 0:
+            vec /= total
+
+        projected = vec @ self._projection
+        norm = np.linalg.norm(projected)
+        if norm > 0:
+            projected /= norm
+        return projected
+
+    def embed_query(self, text: str) -> list[float]:
+        return self._text_to_vector(text).tolist()
+
+    def embed_texts(self, texts: list[str]) -> dict:
+        start = time.perf_counter()
+        if not texts:
+            return {
+                "model": "random-projection",
+                "dimension": self.dimension,
+                "count": 0,
+                "vectors": [],
+                "duration_ms": 0,
+            }
+
+        vectors = [self._text_to_vector(t) for t in texts]
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        return {
+            "model": "random-projection",
+            "dimension": self.dimension,
+            "count": len(texts),
+            "vectors": [v.tolist() for v in vectors],
+            "duration_ms": round(elapsed_ms, 2),
+        }
 
 
 class SentenceTransformerProvider:
@@ -114,6 +181,21 @@ class OpenAIProvider:
         }
 
 
+def _create_provider(provider: str, model_name: str, api_key: str, dimension: int):
+    """Create the best available provider for the given config."""
+    if provider == "openai" and api_key:
+        return OpenAIProvider(model_name=model_name, api_key=api_key)
+
+    if provider == "sentence-transformers":
+        try:
+            import sentence_transformers  # noqa: F401
+            return SentenceTransformerProvider(model_name=model_name)
+        except ImportError:
+            pass
+
+    return RandomProjectionProvider(dimension=dimension)
+
+
 class EmbeddingService:
     """Pluggable embedding service with provider selection."""
 
@@ -126,11 +208,17 @@ class EmbeddingService:
     ):
         self.provider_name = provider
         self.dimension = dimension
+        self._provider = _create_provider(provider, model_name, api_key, dimension)
 
-        if provider == "openai":
-            self._provider = OpenAIProvider(model_name=model_name, api_key=api_key)
-        else:
-            self._provider = SentenceTransformerProvider(model_name=model_name)
+    @property
+    def actual_provider(self) -> str:
+        if isinstance(self._provider, RandomProjectionProvider):
+            return "random-projection"
+        elif isinstance(self._provider, SentenceTransformerProvider):
+            return "sentence-transformers"
+        elif isinstance(self._provider, OpenAIProvider):
+            return "openai"
+        return "unknown"
 
     def embed_query(self, text: str) -> list[float]:
         """Embed a single query string."""

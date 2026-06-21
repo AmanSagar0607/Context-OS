@@ -4,6 +4,7 @@ Tests for embedding service — Mock-based tests without model loading.
 
 import sys
 from pathlib import Path
+from importlib import import_module
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -11,7 +12,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import pytest
 from unittest.mock import MagicMock, patch
 
-from embeddings.service import EmbeddingService
+# Import the real module directly from the file path to avoid
+# contamination from test_consolidation.py's sys.modules patches
+import importlib.util
+_spec = importlib.util.spec_from_file_location(
+    "embeddings.service",
+    str(Path(__file__).parent.parent / "embeddings" / "service.py"),
+)
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+EmbeddingService = _mod.EmbeddingService
+SentenceTransformerProvider = _mod.SentenceTransformerProvider
 
 
 class TestEmbeddingService:
@@ -38,36 +49,30 @@ class TestEmbeddingService:
         assert service.provider_name == "openai"
         assert service.dimension == 1536
 
-    @patch("embeddings.service.SentenceTransformerProvider")
-    def test_embed_query_calls_provider(self, mock_provider_class):
+    @patch.object(SentenceTransformerProvider, "embed_query", return_value=[0.1, 0.2, 0.3])
+    def test_embed_query_calls_provider(self, mock_embed):
         """embed_query delegates to provider."""
-        mock_provider = MagicMock()
-        mock_provider.embed_query.return_value = [0.1, 0.2, 0.3]
-        mock_provider_class.return_value = mock_provider
-
         service = EmbeddingService(provider="sentence-transformers")
         result = service.embed_query("test query")
 
-        mock_provider.embed_query.assert_called_once_with("test query")
+        mock_embed.assert_called_once_with("test query")
         assert result == [0.1, 0.2, 0.3]
 
-    @patch("embeddings.service.SentenceTransformerProvider")
-    def test_embed_texts_calls_provider(self, mock_provider_class):
+    @patch.object(SentenceTransformerProvider, "embed_texts")
+    def test_embed_texts_calls_provider(self, mock_embed):
         """embed_texts delegates to provider."""
-        mock_provider = MagicMock()
-        mock_provider.embed_texts.return_value = {
+        mock_embed.return_value = {
             "model": "all-MiniLM-L6-v2",
             "dimension": 384,
             "count": 2,
             "vectors": [[0.1, 0.2], [0.3, 0.4]],
             "duration_ms": 10.5,
         }
-        mock_provider_class.return_value = mock_provider
 
         service = EmbeddingService(provider="sentence-transformers")
         result = service.embed_texts(["text1", "text2"])
 
-        mock_provider.embed_texts.assert_called_once_with(["text1", "text2"])
+        mock_embed.assert_called_once_with(["text1", "text2"])
         assert result["count"] == 2
         assert len(result["vectors"]) == 2
 
