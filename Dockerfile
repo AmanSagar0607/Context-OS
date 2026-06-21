@@ -11,14 +11,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
-COPY packages/context-core/pyproject.toml /app/packages/context-core/
+COPY packages/context-core/pyproject.toml packages/context-core/README.md /app/packages/context-core/
 COPY packages/context-db/ /app/packages/context-db/
-COPY apps/server/pyproject.toml /app/apps/server/
+COPY apps/server/pyproject.toml apps/server/README.md /app/apps/server/
 COPY pyproject.toml /app/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -e "packages/context-core[dev]"
 RUN pip install --no-cache-dir -e "apps/server[dev]"
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────
@@ -39,6 +38,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY packages/context-core/ /app/packages/context-core/
 COPY packages/context-db/ /app/packages/context-db/
 COPY apps/server/ /app/apps/server/
+
+# Rename context-core -> context_core for Python imports
+RUN mv /app/packages/context-core /app/packages/context_core
 
 # Set working directory
 WORKDIR /app/apps/server

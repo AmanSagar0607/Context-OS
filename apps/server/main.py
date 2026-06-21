@@ -14,13 +14,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Add parent directories to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "packages"))
+sys.path.insert(0, str(Path(__file__).parent))
 
 from context_core.config import get_settings
 from context_core.memory.service import MemoryService
 from context_core.embeddings.service import EmbeddingService
 
-from .routes import memory, health
-from .middleware.auth import AuthMiddleware
+from routes import memory, health
+from middleware.auth import AuthMiddleware
 
 
 @asynccontextmanager
